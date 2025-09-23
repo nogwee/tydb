@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Typhoon Map</title>
+  <link href="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css" rel="stylesheet" />
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <div id="app">
+    <aside id="sidebar">
+      <h3>Layers</h3>
+      <label><input type="checkbox" id="chk-precip"> 降水（ERA5）</label><br>
+      <label><input type="checkbox" id="chk-wind"> 風（ERA5 10m）</label><br>
+      <label><input type="checkbox" id="chk-rail"> 鉄道運行</label>
+
+      <h3>Typhoon</h3>
+      <select id="sel-typhoon">
+        <option value="sample-2020">Jebi 2018</option>
+      </select>
+
+      <h3>Time(UTC)</h3>
+      <div id="time-row">
+        <input type="range" id="time" min="0" max="0" step="1" value="0">
+      </div>
+      <div id="time-label">
+        <span id="label">0</span>
+      </div>
+    </aside>
+
+    <main id="map"></main>
+  </div>
+
+  <!-- MapLibre本体 → 自作JSの順で読み込む -->
+  <script src="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"></script>
+  <script src="./js/typhoon.js"></script>
+</body>
+</html>
