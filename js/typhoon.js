@@ -4,7 +4,9 @@ const label  = document.getElementById('label');
 const selTy  = document.getElementById('sel-typhoon');
 const chkPre = document.getElementById('chk-precip');
 const chkWin = document.getElementById('chk-wind');
-const chkRail= document.getElementById('chk-rail');
+// const chkRail= document.getElementById('chk-rail');
+const chkTrackLine = document.getElementById('chk-trackline');
+const chkActive = document.getElementById('chk-active');
 
 // ===== 雨量PNGの貼り付け設定（あなたの格子に合わせて調整） =====
 const GRID = { minLon:110.0, maxLon:160.0, minLat:10.0, maxLat:50.0, dLon:0.25, dLat:0.25 };
@@ -34,31 +36,44 @@ const map = new maplibregl.Map({
       },
       track:   { type:'geojson', data:{ "type":"FeatureCollection","features":[] } },
       windsrc: { type:'geojson', data:{ "type":"FeatureCollection","features":[] } },
-      railsrc: { type:'geojson', data:{ "type":"FeatureCollection","features":[] } }
+      // railsrc: { type:'geojson', data:{ "type":"FeatureCollection","features":[] } }
       // ★ ここに precip-img は入れない（後で addSource する）
     },
     layers: [
       { id:'basemap', type:'raster', source:'basemap' },
 
+      // 経路(線)
       { id:'track-line', type:'line', source:'track',
         paint:{ 'line-color':'#333','line-width':2 } },
+      // 経路(ポイント)
       { id:'track-points', type:'circle', source:'track',
         filter:['==',['get','kind'],'point'],
         paint:{ 'circle-radius':4, 'circle-color':'#666' } },
+      // 現在位置
       { id:'track-points-active', type:'circle', source:'track',
         filter:['all',['==',['get','kind'],'point'], ['==',['get','t_idx'], 0]],
-        paint:{ 'circle-radius':6, 'circle-color':'#d22', 'circle-stroke-color':'#fff', 'circle-stroke-width':1 } },
+        paint:{ 'circle-radius':4, 'circle-color':'#d22', 'circle-stroke-color':'#fff', 'circle-stroke-width':1 } },
+      // 現在位置のアニメーション
+      { id:'track-pulse', type:'circle', source:'track',
+        filter:['all',['==',['get','kind'],'point'], ['==',['get','t_idx'], 0]],
+        paint:{
+          'circle-radius': 12,                 // ← JSで毎フレーム更新
+          'circle-color':  '#ff2d2d',
+          'circle-opacity': 0.25,              // ← JSで毎フレーム更新
+          'circle-blur':   0.4
+        }
+      },
 
       // 風・鉄道（ダミー）
       { id:'wind', type:'circle', source:'windsrc',
         layout:{ visibility:'none' },
         paint:{ 'circle-radius':3, 'circle-color':'#2b8a3e' } },
-      { id:'rail', type:'line', source:'railsrc',
-        layout:{ visibility:'none' },
-        paint:{ 'line-color':'#8e44ad', 'line-width':2 } }
+      // { id:'rail', type:'line', source:'railsrc',
+      //   layout:{ visibility:'none' },
+      //   paint:{ 'line-color':'#8e44ad', 'line-width':2 } }
     ]
   },
-  center:[139.7,35.6], zoom:4
+  center:[139.7,35.6], zoom:3
 });
 
 // ===== ユーティリティ =====
@@ -66,10 +81,22 @@ function setLayerVisibility(layerId, visible) {
   if (!map.getLayer(layerId)) return;
   map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none');
 }
+function setLayersVisibility(layerIds, visible) {
+  layerIds.forEach(id => {
+    if (map.getLayer(id)) {
+      map.setLayoutProperty(id, 'visibility', visible ? 'visible' : 'none');
+    }
+  });
+}
 function bindToggle(checkboxEl, layerId) {
   const apply = () => setLayerVisibility(layerId, checkboxEl.checked);
   checkboxEl.addEventListener('change', apply);
   map.on('load', apply);
+}
+function bindToggleMulti(checkboxEl, layerIds) {
+  const apply = () => setLayersVisibility(layerIds, checkboxEl.checked);
+  checkboxEl.addEventListener('change', apply);
+  map.on('load', apply); // 初期状態も反映
 }
 
 // "YYYY-MM-DD HH:MM:SS" → "YYYYMMDDTHHMMZ"（UTCとして扱う）
@@ -81,12 +108,18 @@ function timeStringToKey(s) {
   return `${yyyy}${MM}${dd}T${HH}${mm}Z`;
 }
 
+// ===== 現在位置のフィルタ更新（線・点は別） =====
+function updateActiveFilters(t) {
+  const filt = ['all', ['==',['get','kind'],'point'], ['==',['get','t_idx'], t]];
+  if (map.getLayer('track-points-active')) map.setFilter('track-points-active', filt);
+  if (map.getLayer('track-pulse'))   map.setFilter('track-pulse',   filt);
+}
+
 function setActiveTime(t) {
   const timeText = TIME_TEXTS[t] || `t=${t}`;
   label.textContent = timeText;
-  map.setFilter('track-points-active',
-    ['all', ['==',['get','kind'],'point'], ['==',['get','t_idx'], t]]
-  );
+  // 現在位置のフィルタ更新
+  updateActiveFilters(t);
   // スライダーに合わせて降水PNGを切替
   const key = PRECIP_KEYS[t];
   if (key) setPrecipTime(key);
@@ -175,7 +208,48 @@ function setPrecipTime(key) {
   // 座標は固定なら setCoordinates は不要
 }
 
-// ===== イベント配線 =====
+// ===== 波紋アニメーション =====
+let _pulseRAF = null;
+let _pulseRunning = false;
+const PULSE_PERIOD = 1200;     // ms（1周の時間）
+const PULSE_MIN_R = 10;        // 開始半径
+const PULSE_MAX_R = 20;        // 最大半径
+function _pulseStep() {
+  if (!_pulseRunning) return;
+  const now = performance.now();
+  const t = (now % PULSE_PERIOD) / PULSE_PERIOD; // 0→1
+
+  let radius, opacity;
+
+  if (t < 0.9) {
+    // 通常の拡大フェーズ
+    radius  = PULSE_MIN_R + (PULSE_MAX_R - PULSE_MIN_R) * t;
+    opacity = 0.35 * (1 - t);
+  } else {
+    // フェードアウト後にリセット（縮小を見せない）
+    radius  = PULSE_MIN_R;
+    opacity = 0;
+  }
+
+  // レイヤがあるときだけ更新
+  if (map.getLayer('track-pulse')) {
+    map.setPaintProperty('track-pulse', 'circle-radius', radius);
+    map.setPaintProperty('track-pulse', 'circle-opacity', opacity);
+  }
+  _pulseRAF = requestAnimationFrame(_pulseStep);
+}
+function startPulse() {
+  if (_pulseRunning) return;
+  _pulseRunning = true;
+  _pulseRAF = requestAnimationFrame(_pulseStep);
+}
+function stopPulse() {
+  _pulseRunning = false;
+  if (_pulseRAF) cancelAnimationFrame(_pulseRAF);
+  _pulseRAF = null;
+}
+
+// ===== イベントパイプライン =====
 slider.addEventListener('input', (e) => setActiveTime(Number(e.target.value)));
 selTy.addEventListener('change', () => {
   const url = './data/track_sample.geojson'; // TODO: 実IDで切替
@@ -183,7 +257,20 @@ selTy.addEventListener('change', () => {
 });
 bindToggle(chkPre,  'precip-img'); // ← レイヤ追加後に効く
 bindToggle(chkWin,  'wind');
-bindToggle(chkRail, 'rail');
+// bindToggle(chkRail, 'rail');
+
+bindToggleMulti(chkTrackLine, ['track-line','track-points']);
+
+// 現在位置（赤点＋波紋）
+(function bindActive() {
+  const apply = () => {
+    const on = chkActive.checked;
+    setLayersVisibility(['track-points-active','track-pulse'], on);
+    if (on) startPulse(); else stopPulse();
+  };
+  chkActive.addEventListener('change', apply);
+  map.on('load', apply);
+})();
 
 // ===== 初期ロード =====
 map.on('load', () => {
@@ -203,9 +290,7 @@ map.on('load', () => {
   }
 
   // ★ 3) 経路関連レイヤを最前面に移動
-  ["track-line", "track-points", "track-points-active"].forEach(id => {
-    if (map.getLayer(id)) {
-      map.moveLayer(id);
-    }
+  ['track-line','track-points','track-points-active','track-pulse'].forEach(id => {
+    if (map.getLayer(id)) map.moveLayer(id);
   });
 });
