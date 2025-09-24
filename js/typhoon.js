@@ -4,24 +4,22 @@ const label  = document.getElementById('label');
 const selTy  = document.getElementById('sel-typhoon');
 const chkPre = document.getElementById('chk-precip');
 const chkWin = document.getElementById('chk-wind');
-// const chkRail= document.getElementById('chk-rail');
 const chkTrackLine = document.getElementById('chk-trackline');
 const chkActive = document.getElementById('chk-active');
 
-// ===== 雨量PNGの貼り付け設定（あなたの格子に合わせて調整） =====
+// ===== 雨量PNG設定 =====
 const GRID = { minLon:110.0, maxLon:160.0, minLat:10.0, maxLat:50.0, dLon:0.25, dLat:0.25 };
 const BOUNDS = [
-  [GRID.minLon - GRID.dLon/2, GRID.maxLat + GRID.dLat/2], // 左上
-  [GRID.maxLon + GRID.dLon/2, GRID.maxLat + GRID.dLat/2], // 右上
-  [GRID.maxLon + GRID.dLon/2, GRID.minLat - GRID.dLat/2], // 右下
-  [GRID.minLon - GRID.dLon/2, GRID.minLat - GRID.dLat/2], // 左下
+  [GRID.minLon - GRID.dLon/2, GRID.maxLat + GRID.dLat/2],
+  [GRID.maxLon + GRID.dLon/2, GRID.maxLat + GRID.dLat/2],
+  [GRID.maxLon + GRID.dLon/2, GRID.minLat - GRID.dLat/2],
+  [GRID.minLon - GRID.dLon/2, GRID.minLat - GRID.dLat/2],
 ];
 const PRECIP_PNG = (key) => `./overlays/precip_${key}.png`;
-const INITIAL_PRECIP_KEY = "20180903T0000Z"; // 初期表示用（任意の存在するPNGキーに）
+const INITIAL_PRECIP_KEY = "20180903T0000Z";
 
-// スライダーの t_idx → PNGファイル名キー（YYYYMMDDTHHMMZ）
 let PRECIP_KEYS = [];
-let TIME_TEXTS   = [];
+let TIME_TEXTS  = [];
 
 // ===== 地図 =====
 const map = new maplibregl.Map({
@@ -36,45 +34,133 @@ const map = new maplibregl.Map({
       },
       track:   { type:'geojson', data:{ "type":"FeatureCollection","features":[] } },
       windsrc: { type:'geojson', data:{ "type":"FeatureCollection","features":[] } },
-      // railsrc: { type:'geojson', data:{ "type":"FeatureCollection","features":[] } }
-      // ★ ここに precip-img は入れない（後で addSource する）
     },
     layers: [
       { id:'basemap', type:'raster', source:'basemap' },
-
-      // 経路(線)
       { id:'track-line', type:'line', source:'track',
         paint:{ 'line-color':'#333','line-width':2 } },
-      // 経路(ポイント)
       { id:'track-points', type:'circle', source:'track',
         filter:['==',['get','kind'],'point'],
         paint:{ 'circle-radius':4, 'circle-color':'#666' } },
-      // 現在位置
-      { id:'track-points-active', type:'circle', source:'track',
-        filter:['all',['==',['get','kind'],'point'], ['==',['get','t_idx'], 0]],
-        paint:{ 'circle-radius':4, 'circle-color':'#d22', 'circle-stroke-color':'#fff', 'circle-stroke-width':1 } },
-      // 現在位置のアニメーション
-      { id:'track-pulse', type:'circle', source:'track',
-        filter:['all',['==',['get','kind'],'point'], ['==',['get','t_idx'], 0]],
-        paint:{
-          'circle-radius': 12,                 // ← JSで毎フレーム更新
-          'circle-color':  '#ff2d2d',
-          'circle-opacity': 0.25,              // ← JSで毎フレーム更新
-          'circle-blur':   0.4
-        }
-      },
-
-      // 風・鉄道（ダミー）
       { id:'wind', type:'circle', source:'windsrc',
         layout:{ visibility:'none' },
-        paint:{ 'circle-radius':3, 'circle-color':'#2b8a3e' } },
-      // { id:'rail', type:'line', source:'railsrc',
-      //   layout:{ visibility:'none' },
-      //   paint:{ 'line-color':'#8e44ad', 'line-width':2 } }
+        paint:{ 'circle-radius':3, 'circle-color':'#2b8a3e' } }
     ]
   },
   center:[139.7,35.6], zoom:3
 });
+
+// === 1h 内挿ユーティリティ ===
+const HOUR = 3600000;
+const wrapLon = lon => ((lon + 180) % 360) - 180;
+const diffHours = (t1, t0) => (t1 - t0) / HOUR;
+
+function lerpPos(A, B, f){
+  let lon1 = B.lon;
+  const dlon = lon1 - A.lon;
+  if (dlon > 180) lon1 -= 360;
+  if (dlon < -180) lon1 += 360;
+  const lat = A.lat + (B.lat - A.lat) * f;
+  const lon = wrapLon(A.lon + (lon1 - A.lon) * f);
+  return { lat, lon };
+}
+
+function toDateAny(v){
+  if (v instanceof Date) return v;
+  if (typeof v === 'number') return new Date(v < 1e12 ? v*1000 : v);
+  return new Date(v);
+}
+
+function buildHourlyTimeline(startTime, endTime){
+  const out = [];
+  const t0 = new Date(Math.ceil(startTime.getTime()/HOUR)*HOUR);
+  for (let t=t0.getTime(); t<=endTime.getTime(); t+=HOUR) out.push(new Date(t));
+  return out;
+}
+
+function findBracket(arr, t){
+  let lo = 0, hi = arr.length-1;
+  if (t <= arr[0].time) return {i0:0,i1:0};
+  if (t >= arr[hi].time) return {i0:hi,i1:hi};
+  while (hi-lo>1){
+    const mid=(lo+hi)>>1;
+    (arr[mid].time <= t ? lo=mid : hi=mid);
+  }
+  return {i0:lo,i1:hi};
+}
+
+function interpolateAt(trackPts, t, {maxGapHours=6}={}){
+  if (t <= trackPts[0].time) return { time:t, lat:trackPts[0].lat, lon:trackPts[0].lon };
+  if (t >= trackPts[trackPts.length-1].time) {
+    const L = trackPts[trackPts.length-1];
+    return { time:t, lat:L.lat, lon:L.lon };
+  }
+  const {i0,i1} = findBracket(trackPts, t);
+  const A = trackPts[i0], B = trackPts[i1];
+  const gap = diffHours(B.time, A.time);
+  if (gap <= 0 || gap > maxGapHours) return null;
+  const f = diffHours(t, A.time) / gap;
+  const {lat,lon} = lerpPos(A,B,f);
+  return { time:t, lat, lon };
+}
+
+function dateToKeyUTC(d){
+  const pad = n => String(n).padStart(2,'0');
+  return `${d.getUTCFullYear()}${pad(d.getUTCMonth()+1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}Z`;
+}
+
+// ===== active 用レイヤ =====
+function ensureActiveLayers(initial) {
+  const srcId = 'active';
+  if (!map.getSource(srcId)) {
+    map.addSource(srcId, {
+      type: 'geojson',
+      data: {
+        type:'FeatureCollection',
+        features:[{
+          type:'Feature',
+          properties:{},
+          geometry:{ type:'Point', coordinates:[initial.lon, initial.lat] }
+        }]
+      }
+    });
+    map.addLayer({
+      id:'active-point',
+      type:'circle',
+      source:srcId,
+      paint:{
+        'circle-radius': 4,
+        'circle-color': '#d22',
+        'circle-stroke-color':'#fff',
+        'circle-stroke-width':1
+      }
+    });
+    map.addLayer({
+      id:'active-pulse',
+      type:'circle',
+      source:srcId,
+      paint:{
+        'circle-radius': 12,
+        'circle-color':  '#ff2d2d',
+        'circle-opacity': 0.25,
+        'circle-blur':   0.4
+      }
+    });
+  }
+}
+
+function setActivePosition(lat, lon){
+  const src = map.getSource('active');
+  if (!src) return;
+  src.setData({
+    type:'FeatureCollection',
+    features:[{
+      type:'Feature',
+      properties:{},
+      geometry:{ type:'Point', coordinates:[lon, lat] }
+    }]
+  });
+}
 
 // ===== ユーティリティ =====
 function setLayerVisibility(layerId, visible) {
@@ -96,31 +182,15 @@ function bindToggle(checkboxEl, layerId) {
 function bindToggleMulti(checkboxEl, layerIds) {
   const apply = () => setLayersVisibility(layerIds, checkboxEl.checked);
   checkboxEl.addEventListener('change', apply);
-  map.on('load', apply); // 初期状態も反映
+  map.on('load', apply);
 }
 
-// "YYYY-MM-DD HH:MM:SS" → "YYYYMMDDTHHMMZ"（UTCとして扱う）
-function timeStringToKey(s) {
-  // 例: "2018-09-04 18:00:00"
-  const m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})$/.exec(s);
-  if (!m) return null;
-  const yyyy = m[1], MM = m[2], dd = m[3], HH = m[4], mm = m[5]; // ss=m[6] は捨てる
-  return `${yyyy}${MM}${dd}T${HH}${mm}Z`;
-}
-
-// ===== 現在位置のフィルタ更新（線・点は別） =====
-function updateActiveFilters(t) {
-  const filt = ['all', ['==',['get','kind'],'point'], ['==',['get','t_idx'], t]];
-  if (map.getLayer('track-points-active')) map.setFilter('track-points-active', filt);
-  if (map.getLayer('track-pulse'))   map.setFilter('track-pulse',   filt);
-}
-
+// ===== アクティブ時刻更新 =====
 function setActiveTime(t) {
-  const timeText = TIME_TEXTS[t] || `t=${t}`;
-  label.textContent = timeText;
-  // 現在位置のフィルタ更新
-  updateActiveFilters(t);
-  // スライダーに合わせて降水PNGを切替
+  const p = window.__hourlyPoints?.[t];
+  if (!p) return;
+  label.textContent = TIME_TEXTS[t] || `t=${t}`;
+  setActivePosition(p.lat, p.lon);
   const key = PRECIP_KEYS[t];
   if (key) setPrecipTime(key);
 }
@@ -131,110 +201,93 @@ async function loadTrack(geojsonUrl) {
   if (!res.ok) throw new Error('GeoJSON 読込失敗: ' + res.status);
   const geo = await res.json();
 
-  const points = geo.features.filter(f => f.properties?.kind === 'point');
-
-  // t_idx を保証
-  if (points.length && points.every(f => typeof f.properties.t_idx !== 'number')) {
-    points.forEach((f, i) => f.properties.t_idx = i);
-  }
-
-  // t_idx 昇順に並べて PNGキー配列を構築
-  const sorted = [...points].sort((a,b) => (a.properties.t_idx ?? 0) - (b.properties.t_idx ?? 0));
-  PRECIP_KEYS = [];
-  TIME_TEXTS   = [];
-  sorted.forEach(f => {
-    const p = f.properties || {};
-    // 時刻文字列（"YYYY-MM-DD HH:MM:SS"）を保存
-    if (typeof p.time === 'string') TIME_TEXTS.push(p.time);
-    else TIME_TEXTS.push(null);
-  
-    // PNGキーも従来どおり作成
-    if (p.key && typeof p.key === 'string') {
-      PRECIP_KEYS.push(p.key);
-    } else if (p.time && typeof p.time === 'string') {
-      PRECIP_KEYS.push(timeStringToKey(p.time));
-    } else {
-      PRECIP_KEYS.push(null);
-    }
-  });
-
   map.getSource('track').setData(geo);
 
-  const maxIdx = sorted.reduce((m,f)=>Math.max(m, f.properties.t_idx ?? 0), 0);
+  const rawPoints = geo.features
+    .filter(f => f.properties?.kind === 'point' && f.geometry?.type === 'Point')
+    .map(f => {
+      const p = f.properties || {};
+      const time = (typeof p.time === 'string' || typeof p.time === 'number') ? toDateAny(p.time) : null;
+      const [lon, lat] = f.geometry.coordinates;
+      return { time, lat:+lat, lon:+lon };
+    })
+    .filter(d => d.time instanceof Date && !isNaN(d.time))
+    .sort((a,b)=>a.time-b.time);
+
+  if (!rawPoints.length) throw new Error('pointが見つかりません');
+
+  const hourlyTimes  = buildHourlyTimeline(rawPoints[0].time, rawPoints[rawPoints.length-1].time);
+  const hourlyPoints = [];
+  for (const t of hourlyTimes){
+    const p = interpolateAt(rawPoints, t, {maxGapHours: 9});
+    if (p) hourlyPoints.push(p);
+  }
+
+  PRECIP_KEYS = hourlyPoints.map(p => dateToKeyUTC(p.time));
+  TIME_TEXTS  = hourlyPoints.map(p => p.time.toISOString().replace('.000',''));
+
   slider.min = '0';
-  slider.max = String(maxIdx);
+  slider.max = String(hourlyPoints.length - 1);
   slider.step = '1';
   slider.value = '0';
 
-  // 初期アクティブ（PNGも切替）
+  ensureActiveLayers(hourlyPoints[0]);
+  setActivePosition(hourlyPoints[0].lat, hourlyPoints[0].lon);
+
+  window.__hourlyPoints = hourlyPoints;
   setActiveTime(0);
 }
 
-// ===== 雨量PNG（image source + layer を load 後に追加） =====
+// ===== 雨量PNG =====
 function addOrUpdatePrecip(key = INITIAL_PRECIP_KEY) {
   const srcId = 'precip-img';
   const layerId = 'precip-img';
   const url = PRECIP_PNG(key);
 
   if (!map.getSource(srcId)) {
-    // ソースを追加
     map.addSource(srcId, {
       type: 'image',
       url,
       coordinates: BOUNDS
     });
-    // レイヤを追加（source を参照させる）
     map.addLayer({
       id: layerId,
       type: 'raster',
       source: srcId,
-      layout: { visibility: chkPre.checked ? 'visible' : 'none' }, // 初期はチェックボックスに合わせる
-      paint: {
-        'raster-opacity': 0.6,
-        'raster-resampling': 'nearest'
-      }
+      layout: { visibility: chkPre.checked ? 'visible' : 'none' },
+      paint: { 'raster-opacity': 0.6, 'raster-resampling': 'nearest' }
     });
   } else {
-    // 既存ソースの画像だけ差し替え
-    const src = map.getSource(srcId);
-    src.updateImage({ url, coordinates: BOUNDS });
-    // src.setCoordinates(BOUNDS);
+    map.getSource(srcId).updateImage({ url, coordinates: BOUNDS });
   }
 }
 function setPrecipTime(key) {
   const src = map.getSource('precip-img');
   if (!src) return;
-  src.updateImage({ url: PRECIP_PNG(key) }); // 座標は固定なら省略OK
-  // 座標は固定なら setCoordinates は不要
+  src.updateImage({ url: PRECIP_PNG(key) });
 }
 
 // ===== 波紋アニメーション =====
 let _pulseRAF = null;
 let _pulseRunning = false;
-const PULSE_PERIOD = 1200;     // ms（1周の時間）
-const PULSE_MIN_R = 10;        // 開始半径
-const PULSE_MAX_R = 20;        // 最大半径
+const PULSE_PERIOD = 1200;
+const PULSE_MIN_R = 10;
+const PULSE_MAX_R = 20;
 function _pulseStep() {
   if (!_pulseRunning) return;
   const now = performance.now();
-  const t = (now % PULSE_PERIOD) / PULSE_PERIOD; // 0→1
-
+  const t = (now % PULSE_PERIOD) / PULSE_PERIOD;
   let radius, opacity;
-
   if (t < 0.9) {
-    // 通常の拡大フェーズ
     radius  = PULSE_MIN_R + (PULSE_MAX_R - PULSE_MIN_R) * t;
     opacity = 0.35 * (1 - t);
   } else {
-    // フェードアウト後にリセット（縮小を見せない）
     radius  = PULSE_MIN_R;
     opacity = 0;
   }
-
-  // レイヤがあるときだけ更新
-  if (map.getLayer('track-pulse')) {
-    map.setPaintProperty('track-pulse', 'circle-radius', radius);
-    map.setPaintProperty('track-pulse', 'circle-opacity', opacity);
+  if (map.getLayer('active-pulse')) {
+    map.setPaintProperty('active-pulse', 'circle-radius', radius);
+    map.setPaintProperty('active-pulse', 'circle-opacity', opacity);
   }
   _pulseRAF = requestAnimationFrame(_pulseStep);
 }
@@ -249,37 +302,21 @@ function stopPulse() {
   _pulseRAF = null;
 }
 
-// ===== イベントパイプライン =====
+// ===== イベント =====
 slider.addEventListener('input', (e) => setActiveTime(Number(e.target.value)));
 selTy.addEventListener('change', () => {
-  const url = './data/track_sample.geojson'; // TODO: 実IDで切替
-  loadTrack(url).catch(err => { console.error(err); alert('トラック読み込みエラー: ' + err.message); });
+  loadTrack('./data/track_sample.geojson').catch(err => {
+    console.error(err); alert('トラック読み込みエラー: ' + err.message);
+  });
 });
-bindToggle(chkPre,  'precip-img'); // ← レイヤ追加後に効く
+bindToggle(chkPre,  'precip-img');
 bindToggle(chkWin,  'wind');
-// bindToggle(chkRail, 'rail');
-
 bindToggleMulti(chkTrackLine, ['track-line','track-points']);
 
-// ===== Wikipediaリンク更新 =====
-const wikiLink = document.getElementById('wiki-link');
-
-function updateWikiLink() {
-  const opt = selTy.selectedOptions[0];
-  const url = opt.dataset.wiki;
-  wikiLink.href = url;
-  wikiLink.textContent = "Wikipedia: " + opt.textContent;
-}
-
-// 初期化 & 選択変更時イベント
-selTy.addEventListener('change', updateWikiLink);
-updateWikiLink();
-
-// 現在位置（赤点＋波紋）
 (function bindActive() {
   const apply = () => {
     const on = chkActive.checked;
-    setLayersVisibility(['track-points-active','track-pulse'], on);
+    setLayersVisibility(['active-point','active-pulse'], on);
     if (on) startPulse(); else stopPulse();
   };
   chkActive.addEventListener('change', apply);
@@ -288,44 +325,26 @@ updateWikiLink();
 
 // ===== 初期ロード =====
 map.on('load', () => {
-  // ベースマップを暗く
-  // map.setPaintProperty('basemap', 'raster-brightness-min', 0.0);
-  // map.setPaintProperty('basemap', 'raster-brightness-max', 0.8);
-
-  // 1) 台風トラック
   loadTrack('./data/track_sample.geojson').catch(err => {
-    console.error(err);
-    alert('初期データ読み込みエラー: ' + err.message);
+    console.error(err); alert('初期データ読み込みエラー: ' + err.message);
   });
-
-  // 2) 降水PNG（存在するなら追加）
   try {
     addOrUpdatePrecip(INITIAL_PRECIP_KEY);
-    // 明示反映（保険）
     setLayerVisibility('precip-img', chkPre.checked);
-  } catch (e) {
-    console.warn('precip PNG の初期化に失敗:', e);
-  }
-
-  // ★ 3) 経路関連レイヤを最前面に移動
-  ['track-line','track-points','track-points-active','track-pulse'].forEach(id => {
+  } catch (e) { console.warn('precip PNG 初期化失敗:', e); }
+  ['track-line','track-points','active-point','active-pulse'].forEach(id => {
     if (map.getLayer(id)) map.moveLayer(id);
   });
 });
 
-// ===== サイドバーの折りたたみ =====
+// ===== サイドバー =====
 const sidebar = document.getElementById('sidebar');
 const toggleBtn = document.getElementById('sidebar-toggle');
-
 toggleBtn.addEventListener('click', () => {
   const collapsed = sidebar.classList.toggle('collapsed');
   toggleBtn.textContent = collapsed ? '≫' : '≪';
   toggleBtn.setAttribute('aria-expanded', String(!collapsed));
 });
-
-// サイドバーのアニメーションが終わったら地図をリサイズ
 sidebar.addEventListener('transitionend', (e) => {
-  if (e.propertyName === 'width') {
-    map.resize();
-  }
+  if (e.propertyName === 'width') map.resize();
 });
