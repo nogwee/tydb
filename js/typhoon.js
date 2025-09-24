@@ -348,3 +348,83 @@ toggleBtn.addEventListener('click', () => {
 sidebar.addEventListener('transitionend', (e) => {
   if (e.propertyName === 'width') map.resize();
 });
+
+// ===== スライダー ±1時間ボタン（自動生成＆キーボード対応） =====
+(function addHourStepButtons(){
+  // 1) 既存ボタンがあれば取得、無ければ作る
+  let btnPrev = document.getElementById('btn-prev');
+  let btnNext = document.getElementById('btn-next');
+
+  function makeBtn(id, text, title){
+    const b = document.createElement('button');
+    b.id = id;
+    b.type = 'button';
+    b.textContent = text;
+    b.title = title;
+    b.style.margin = '0 6px';
+    b.style.padding = '2px 8px';
+    b.style.cursor = 'pointer';
+    return b;
+  }
+
+  if (!btnPrev || !btnNext) {
+    const wrap = document.createElement('div');
+    wrap.style.display = 'flex';
+    wrap.style.alignItems = 'center';
+    wrap.style.gap = '6px';
+
+    // スライダーの親に差し替え挿入
+    const parent = slider.parentElement || document.body;
+    parent.insertBefore(wrap, slider);
+
+    // 生成 or 既存を移動
+    btnPrev = btnPrev || makeBtn('btn-prev', '−1h', '1時間戻る');
+    btnNext = btnNext || makeBtn('btn-next', '+1h', '1時間進む');
+
+    // wrapへ [prev][slider][next] の順に配置
+    wrap.appendChild(btnPrev);
+    wrap.appendChild(slider);
+    wrap.appendChild(btnNext);
+  }
+
+  const getIdx  = () => (Number(slider.value) | 0);
+  const maxIdx  = () => (Number(slider.max)   | 0);
+  const setIdx  = (i) => {
+    const clamped = Math.max(0, Math.min(i, maxIdx()));
+    slider.value = String(clamped);
+    setActiveTime(clamped);
+    updateButtonsDisabled();
+  };
+
+  function updateButtonsDisabled(){
+    const i = getIdx(), m = maxIdx();
+    btnPrev.disabled = (i <= 0);
+    btnNext.disabled = (i >= m);
+  }
+
+  // 2) クリックで±1時間
+  btnPrev.addEventListener('click', () => setIdx(getIdx() - 1));
+  btnNext.addEventListener('click', () => setIdx(getIdx() + 1));
+
+  // 3) スライダー操作時も活性/非活性更新
+  slider.addEventListener('input', updateButtonsDisabled);
+
+  // 4) キーボード（←/→）で±1時間（フォーム入力中は無効）
+  document.addEventListener('keydown', (e) => {
+    const tag = (e.target?.tagName || '').toUpperCase();
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target?.isContentEditable) return;
+    if (e.key === 'ArrowLeft')  { e.preventDefault(); btnPrev.click(); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); btnNext.click(); }
+  });
+
+  // 5) 初期同期（トラック読込後にも呼ばれるよう保険でタイマー）
+  setTimeout(updateButtonsDisabled, 0);
+
+  // 6) トラック読込後にもボタン状態を更新（既存フローにフック）
+  const _origLoadTrack = loadTrack;
+  window.loadTrack = async function(...args){
+    const r = await _origLoadTrack.apply(this, args);
+    updateButtonsDisabled();
+    return r;
+  };
+})();
