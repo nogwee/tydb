@@ -1,6 +1,6 @@
 /* レイアウト：左にサイドバー、右に地図 */
 html, body, #app { height: 100%; margin: 0; }
-#app { display: flex; }
+#app { display: flex; position: relative; }
 
 /* サイドバー */
 #sidebar {
@@ -12,9 +12,46 @@ html, body, #app { height: 100%; margin: 0; }
     font-family: system-ui, sans-serif;
     position: relative;
     z-index: 2; /* 地図より前面 */
+    transition: width .25s ease, padding .25s ease;
+}
+#sidebar.collapsed {
+  width: 0;
+  padding: 0;
+  overflow: hidden;  /* 中身を隠す */
+  border-right: none;
+}
+/* トグルボタン（サイドバー端に沿わせる） */
+#sidebar-toggle {
+  position: absolute;
+  top: 10px;
+  left: 292px;     /* = サイドバー幅(260) + 余白 */
+  z-index: 3;
+  border: 1px solid #ccc;
+  background: #fff;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  user-select: none;
+  transition: left .25s ease; /* サイドバーと一緒にスライド */
+}
+
+/* サイドバーが畳まれたときのボタン位置・表示 */
+#sidebar.collapsed + #sidebar-toggle {
+  left: 10px;      /* 左端に寄せる */
 }
 #sidebar h3 { margin: 8px 0; font-size: 16px; }
 #sidebar label { display: inline-flex; gap: 6px; align-items: center; margin: 4px 0; }
+
+#sidebar-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #ffffff;
+  text-align: center;
+  padding: 12px 8px;
+  background: #394e86;
+  border-bottom: 1px solid #ccc;
+  margin:  -12px -12px 12px -12px;
+}
 
 /* 地図エリア */
 #map {
@@ -26,9 +63,24 @@ html, body, #app { height: 100%; margin: 0; }
 
 /* スライダーのラベル */
 #time-row { margin-top: 8px; text-align: center; }
+#time {
+  width: 100%;      /* サイドバー幅に合わせて最大に伸ばす */
+  box-sizing: border-box;
+}
 #time-label { margin-top: 4px; text-align: center; }
 
 #label {
   white-space: nowrap;
   margin-left: 0;
+}
+
+#typhoon-link {
+  margin-top: 8px;
+}
+#typhoon-link a {
+  color: #0066cc;
+  text-decoration: none;
+}
+#typhoon-link a:hover {
+  text-decoration: underline;
 }

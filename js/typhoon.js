@@ -261,6 +261,20 @@ bindToggle(chkWin,  'wind');
 
 bindToggleMulti(chkTrackLine, ['track-line','track-points']);
 
+// ===== Wikipediaリンク更新 =====
+const wikiLink = document.getElementById('wiki-link');
+
+function updateWikiLink() {
+  const opt = selTy.selectedOptions[0];
+  const url = opt.dataset.wiki;
+  wikiLink.href = url;
+  wikiLink.textContent = "Wikipedia: " + opt.textContent;
+}
+
+// 初期化 & 選択変更時イベント
+selTy.addEventListener('change', updateWikiLink);
+updateWikiLink();
+
 // 現在位置（赤点＋波紋）
 (function bindActive() {
   const apply = () => {
@@ -274,6 +288,10 @@ bindToggleMulti(chkTrackLine, ['track-line','track-points']);
 
 // ===== 初期ロード =====
 map.on('load', () => {
+  // ベースマップを暗く
+  // map.setPaintProperty('basemap', 'raster-brightness-min', 0.0);
+  // map.setPaintProperty('basemap', 'raster-brightness-max', 0.8);
+
   // 1) 台風トラック
   loadTrack('./data/track_sample.geojson').catch(err => {
     console.error(err);
@@ -293,4 +311,21 @@ map.on('load', () => {
   ['track-line','track-points','track-points-active','track-pulse'].forEach(id => {
     if (map.getLayer(id)) map.moveLayer(id);
   });
+});
+
+// ===== サイドバーの折りたたみ =====
+const sidebar = document.getElementById('sidebar');
+const toggleBtn = document.getElementById('sidebar-toggle');
+
+toggleBtn.addEventListener('click', () => {
+  const collapsed = sidebar.classList.toggle('collapsed');
+  toggleBtn.textContent = collapsed ? '≫' : '≪';
+  toggleBtn.setAttribute('aria-expanded', String(!collapsed));
+});
+
+// サイドバーのアニメーションが終わったら地図をリサイズ
+sidebar.addEventListener('transitionend', (e) => {
+  if (e.propertyName === 'width') {
+    map.resize();
+  }
 });
