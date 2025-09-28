@@ -54,8 +54,9 @@
     <main id="map"></main>
   </div>
 
-  <!-- MapLibre本体 → 自作JSの順で読み込む -->
+  <!-- MapLibre本体（グローバル: maplibregl） -->
   <script src="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"></script>
-  <script src="./js/typhoon.js"></script>
+  <!-- 自作JS: ES Modules エントリ -->
+  <script type="module" src="./js/main.js"></script>
 </body>
 </html>
