@@ -1,0 +1,398 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "year": 2020,
+        "number": 7,
+        "name": "HIGOS"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            123.4,
+            17.6
+          ],
+          [
+            123.2,
+            17.7
+          ],
+          [
+            122.9,
+            18.5
+          ],
+          [
+            121.9,
+            19.1
+          ],
+          [
+            120.7,
+            19.5
+          ],
+          [
+            119.6,
+            19.7
+          ],
+          [
+            118.4,
+            19.8
+          ],
+          [
+            116.9,
+            20.3
+          ],
+          [
+            115.9,
+            20.5
+          ],
+          [
+            114.8,
+            21.2
+          ],
+          [
+            113.8,
+            21.6
+          ],
+          [
+            113.0,
+            22.2
+          ],
+          [
+            112.0,
+            22.8
+          ],
+          [
+            110.7,
+            23.7
+          ],
+          [
+            109.4,
+            24.0
+          ],
+          [
+            109.0,
+            25.1
+          ],
+          [
+            108.7,
+            26.0
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2020-08-16 06:00:00",
+        "grade": "TD",
+        "lat": 17.6,
+        "lon": 123.4,
+        "pressure": 1006,
+        "wind(knot)": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          123.4,
+          17.6
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2020-08-16 12:00:00",
+        "grade": "TD",
+        "lat": 17.7,
+        "lon": 123.2,
+        "pressure": 1006,
+        "wind(knot)": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          123.2,
+          17.7
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2020-08-16 18:00:00",
+        "grade": "TD",
+        "lat": 18.5,
+        "lon": 122.9,
+        "pressure": 1006,
+        "wind(knot)": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          122.9,
+          18.5
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2020-08-17 00:00:00",
+        "grade": "TD",
+        "lat": 19.1,
+        "lon": 121.9,
+        "pressure": 1006,
+        "wind(knot)": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.9,
+          19.1
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2020-08-17 06:00:00",
+        "grade": "TD",
+        "lat": 19.5,
+        "lon": 120.7,
+        "pressure": 1006,
+        "wind(knot)": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          120.7,
+          19.5
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2020-08-17 12:00:00",
+        "grade": "TD",
+        "lat": 19.7,
+        "lon": 119.6,
+        "pressure": 1004,
+        "wind(knot)": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          119.6,
+          19.7
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2020-08-17 18:00:00",
+        "grade": "TD",
+        "lat": 19.8,
+        "lon": 118.4,
+        "pressure": 1002,
+        "wind(knot)": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          118.4,
+          19.8
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2020-08-18 00:00:00",
+        "grade": "TS",
+        "lat": 20.3,
+        "lon": 116.9,
+        "pressure": 1000,
+        "wind(knot)": 35
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          116.9,
+          20.3
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2020-08-18 06:00:00",
+        "grade": "TS",
+        "lat": 20.5,
+        "lon": 115.9,
+        "pressure": 1000,
+        "wind(knot)": 35
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          115.9,
+          20.5
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2020-08-18 12:00:00",
+        "grade": "TS",
+        "lat": 21.2,
+        "lon": 114.8,
+        "pressure": 998,
+        "wind(knot)": 40
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          114.8,
+          21.2
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2020-08-18 18:00:00",
+        "grade": "STS",
+        "lat": 21.6,
+        "lon": 113.8,
+        "pressure": 996,
+        "wind(knot)": 50
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          113.8,
+          21.6
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2020-08-19 00:00:00",
+        "grade": "STS",
+        "lat": 22.2,
+        "lon": 113.0,
+        "pressure": 992,
+        "wind(knot)": 55
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          113.0,
+          22.2
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2020-08-19 06:00:00",
+        "grade": "TS",
+        "lat": 22.8,
+        "lon": 112.0,
+        "pressure": 998,
+        "wind(knot)": 40
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          112.0,
+          22.8
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2020-08-19 12:00:00",
+        "grade": "TS",
+        "lat": 23.7,
+        "lon": 110.7,
+        "pressure": 1004,
+        "wind(knot)": 35
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.7,
+          23.7
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2020-08-19 18:00:00",
+        "grade": "TD",
+        "lat": 24.0,
+        "lon": 109.4,
+        "pressure": 1006,
+        "wind(knot)": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          109.4,
+          24.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2020-08-20 00:00:00",
+        "grade": "TD",
+        "lat": 25.1,
+        "lon": 109.0,
+        "pressure": 1006,
+        "wind(knot)": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          109.0,
+          25.1
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2020-08-20 06:00:00",
+        "grade": "TD",
+        "lat": 26.0,
+        "lon": 108.7,
+        "pressure": 1006,
+        "wind(knot)": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.7,
+          26.0
+        ]
+      }
+    }
+  ],
+  "bbox": [
+    108.7,
+    17.6,
+    123.4,
+    26.0
+  ]
+}

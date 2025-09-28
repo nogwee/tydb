@@ -1,0 +1,376 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "year": 2024,
+        "number": 26,
+        "name": "PABUK"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            115.3,
+            10.1
+          ],
+          [
+            114.8,
+            10.3
+          ],
+          [
+            114.2,
+            10.5
+          ],
+          [
+            113.7,
+            10.6
+          ],
+          [
+            113.3,
+            10.6
+          ],
+          [
+            112.9,
+            11.2
+          ],
+          [
+            112.6,
+            11.2
+          ],
+          [
+            112.6,
+            11.5
+          ],
+          [
+            112.4,
+            11.6
+          ],
+          [
+            112.2,
+            11.5
+          ],
+          [
+            112.1,
+            11.5
+          ],
+          [
+            111.9,
+            11.4
+          ],
+          [
+            111.3,
+            11.1
+          ],
+          [
+            110.7,
+            10.6
+          ],
+          [
+            110.3,
+            9.7
+          ],
+          [
+            110.2,
+            9.4
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2024-12-21 18:00:00",
+        "grade": "TD",
+        "lat": 10.1,
+        "lon": 115.3,
+        "pressure": 1004,
+        "wind(knot)": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          115.3,
+          10.1
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2024-12-22 00:00:00",
+        "grade": "TD",
+        "lat": 10.3,
+        "lon": 114.8,
+        "pressure": 1006,
+        "wind(knot)": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          114.8,
+          10.3
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2024-12-22 06:00:00",
+        "grade": "TS",
+        "lat": 10.5,
+        "lon": 114.2,
+        "pressure": 1002,
+        "wind(knot)": 35
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          114.2,
+          10.5
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2024-12-22 12:00:00",
+        "grade": "TS",
+        "lat": 10.6,
+        "lon": 113.7,
+        "pressure": 1002,
+        "wind(knot)": 35
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          113.7,
+          10.6
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2024-12-22 18:00:00",
+        "grade": "TS",
+        "lat": 10.6,
+        "lon": 113.3,
+        "pressure": 1002,
+        "wind(knot)": 35
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          113.3,
+          10.6
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2024-12-23 00:00:00",
+        "grade": "TS",
+        "lat": 11.2,
+        "lon": 112.9,
+        "pressure": 1002,
+        "wind(knot)": 35
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          112.9,
+          11.2
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2024-12-23 06:00:00",
+        "grade": "TS",
+        "lat": 11.2,
+        "lon": 112.6,
+        "pressure": 1002,
+        "wind(knot)": 35
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          112.6,
+          11.2
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2024-12-23 12:00:00",
+        "grade": "TS",
+        "lat": 11.5,
+        "lon": 112.6,
+        "pressure": 1002,
+        "wind(knot)": 35
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          112.6,
+          11.5
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2024-12-23 18:00:00",
+        "grade": "TS",
+        "lat": 11.6,
+        "lon": 112.4,
+        "pressure": 1002,
+        "wind(knot)": 35
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          112.4,
+          11.6
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2024-12-24 00:00:00",
+        "grade": "TS",
+        "lat": 11.5,
+        "lon": 112.2,
+        "pressure": 1002,
+        "wind(knot)": 35
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          112.2,
+          11.5
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2024-12-24 06:00:00",
+        "grade": "TS",
+        "lat": 11.5,
+        "lon": 112.1,
+        "pressure": 1002,
+        "wind(knot)": 35
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          112.1,
+          11.5
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2024-12-24 12:00:00",
+        "grade": "TS",
+        "lat": 11.4,
+        "lon": 111.9,
+        "pressure": 1002,
+        "wind(knot)": 35
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          111.9,
+          11.4
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2024-12-24 18:00:00",
+        "grade": "TD",
+        "lat": 11.1,
+        "lon": 111.3,
+        "pressure": 1006,
+        "wind(knot)": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          111.3,
+          11.1
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2024-12-25 00:00:00",
+        "grade": "TD",
+        "lat": 10.6,
+        "lon": 110.7,
+        "pressure": 1006,
+        "wind(knot)": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.7,
+          10.6
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2024-12-25 06:00:00",
+        "grade": "TD",
+        "lat": 9.7,
+        "lon": 110.3,
+        "pressure": 1006,
+        "wind(knot)": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.3,
+          9.7
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2024-12-25 12:00:00",
+        "grade": "TD",
+        "lat": 9.4,
+        "lon": 110.2,
+        "pressure": 1008,
+        "wind(knot)": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.2,
+          9.4
+        ]
+      }
+    }
+  ],
+  "bbox": [
+    110.2,
+    9.4,
+    115.3,
+    11.6
+  ]
+}

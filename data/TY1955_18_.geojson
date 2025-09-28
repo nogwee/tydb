@@ -1,0 +1,420 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "year": 1955,
+        "number": 18,
+        "name": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            159.0,
+            29.9
+          ],
+          [
+            160.3,
+            30.5
+          ],
+          [
+            161.3,
+            31.0
+          ],
+          [
+            162.4,
+            31.6
+          ],
+          [
+            163.2,
+            32.0
+          ],
+          [
+            164.0,
+            32.3
+          ],
+          [
+            164.5,
+            32.7
+          ],
+          [
+            165.0,
+            33.0
+          ],
+          [
+            165.4,
+            33.7
+          ],
+          [
+            165.9,
+            34.3
+          ],
+          [
+            166.3,
+            35.3
+          ],
+          [
+            166.7,
+            36.5
+          ],
+          [
+            166.7,
+            37.6
+          ],
+          [
+            166.4,
+            38.3
+          ],
+          [
+            165.6,
+            39.0
+          ],
+          [
+            164.4,
+            39.2
+          ],
+          [
+            163.0,
+            39.5
+          ],
+          [
+            162.4,
+            39.8
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "1955-08-07 18:00:00",
+        "grade": "TD",
+        "lat": 29.9,
+        "lon": 159.0,
+        "pressure": 1010,
+        "wind(knot)": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          159.0,
+          29.9
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "1955-08-08 00:00:00",
+        "grade": "TD",
+        "lat": 30.5,
+        "lon": 160.3,
+        "pressure": 1010,
+        "wind(knot)": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          160.3,
+          30.5
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "1955-08-08 06:00:00",
+        "grade": "TD",
+        "lat": 31.0,
+        "lon": 161.3,
+        "pressure": 1010,
+        "wind(knot)": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          161.3,
+          31.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "1955-08-08 12:00:00",
+        "grade": "TD",
+        "lat": 31.6,
+        "lon": 162.4,
+        "pressure": 1012,
+        "wind(knot)": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          162.4,
+          31.6
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "1955-08-08 18:00:00",
+        "grade": "TD",
+        "lat": 32.0,
+        "lon": 163.2,
+        "pressure": 1010,
+        "wind(knot)": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          163.2,
+          32.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "1955-08-09 00:00:00",
+        "grade": "TD",
+        "lat": 32.3,
+        "lon": 164.0,
+        "pressure": 1008,
+        "wind(knot)": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          164.0,
+          32.3
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "1955-08-09 06:00:00",
+        "grade": "TD",
+        "lat": 32.7,
+        "lon": 164.5,
+        "pressure": 1006,
+        "wind(knot)": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          164.5,
+          32.7
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "1955-08-09 12:00:00",
+        "grade": "TD",
+        "lat": 33.0,
+        "lon": 165.0,
+        "pressure": 1004,
+        "wind(knot)": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          165.0,
+          33.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "1955-08-09 18:00:00",
+        "grade": "TD",
+        "lat": 33.7,
+        "lon": 165.4,
+        "pressure": 1004,
+        "wind(knot)": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          165.4,
+          33.7
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "1955-08-10 00:00:00",
+        "grade": "TD",
+        "lat": 34.3,
+        "lon": 165.9,
+        "pressure": 1006,
+        "wind(knot)": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          165.9,
+          34.3
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "1955-08-10 06:00:00",
+        "grade": "TD",
+        "lat": 35.3,
+        "lon": 166.3,
+        "pressure": 1000,
+        "wind(knot)": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          166.3,
+          35.3
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "1955-08-10 12:00:00",
+        "grade": "TD",
+        "lat": 36.5,
+        "lon": 166.7,
+        "pressure": 1000,
+        "wind(knot)": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          166.7,
+          36.5
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "1955-08-10 18:00:00",
+        "grade": "9",
+        "lat": 37.6,
+        "lon": 166.7,
+        "pressure": 1000,
+        "wind(knot)": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          166.7,
+          37.6
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "1955-08-11 00:00:00",
+        "grade": "9",
+        "lat": 38.3,
+        "lon": 166.4,
+        "pressure": 1000,
+        "wind(knot)": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          166.4,
+          38.3
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "1955-08-11 06:00:00",
+        "grade": "9",
+        "lat": 39.0,
+        "lon": 165.6,
+        "pressure": 1000,
+        "wind(knot)": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          165.6,
+          39.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "1955-08-11 12:00:00",
+        "grade": "9",
+        "lat": 39.2,
+        "lon": 164.4,
+        "pressure": 1000,
+        "wind(knot)": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          164.4,
+          39.2
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "1955-08-11 18:00:00",
+        "grade": "9",
+        "lat": 39.5,
+        "lon": 163.0,
+        "pressure": 998,
+        "wind(knot)": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          163.0,
+          39.5
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "1955-08-12 00:00:00",
+        "grade": "9",
+        "lat": 39.8,
+        "lon": 162.4,
+        "pressure": 1002,
+        "wind(knot)": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          162.4,
+          39.8
+        ]
+      }
+    }
+  ],
+  "bbox": [
+    159.0,
+    29.9,
+    166.7,
+    39.8
+  ]
+}

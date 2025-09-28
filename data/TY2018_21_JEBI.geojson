@@ -1,0 +1,1234 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "year": 2018,
+        "number": 21,
+        "name": "JEBI"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            160.5,
+            11.0
+          ],
+          [
+            159.7,
+            11.9
+          ],
+          [
+            159.2,
+            12.8
+          ],
+          [
+            158.9,
+            13.6
+          ],
+          [
+            157.9,
+            14.5
+          ],
+          [
+            157.0,
+            15.4
+          ],
+          [
+            156.3,
+            16.2
+          ],
+          [
+            155.6,
+            16.6
+          ],
+          [
+            154.4,
+            16.7
+          ],
+          [
+            153.5,
+            17.0
+          ],
+          [
+            152.3,
+            17.3
+          ],
+          [
+            151.4,
+            17.3
+          ],
+          [
+            150.5,
+            17.4
+          ],
+          [
+            149.1,
+            17.6
+          ],
+          [
+            148.1,
+            17.7
+          ],
+          [
+            146.9,
+            17.8
+          ],
+          [
+            145.4,
+            17.8
+          ],
+          [
+            144.2,
+            17.9
+          ],
+          [
+            142.7,
+            18.3
+          ],
+          [
+            141.5,
+            18.5
+          ],
+          [
+            140.2,
+            19.1
+          ],
+          [
+            139.2,
+            19.6
+          ],
+          [
+            138.3,
+            20.4
+          ],
+          [
+            137.3,
+            21.0
+          ],
+          [
+            136.5,
+            21.8
+          ],
+          [
+            135.8,
+            22.7
+          ],
+          [
+            135.0,
+            23.7
+          ],
+          [
+            134.4,
+            24.5
+          ],
+          [
+            133.8,
+            25.5
+          ],
+          [
+            133.2,
+            26.6
+          ],
+          [
+            132.6,
+            27.5
+          ],
+          [
+            132.6,
+            28.6
+          ],
+          [
+            132.6,
+            29.4
+          ],
+          [
+            132.8,
+            30.3
+          ],
+          [
+            133.2,
+            31.3
+          ],
+          [
+            133.7,
+            32.4
+          ],
+          [
+            134.2,
+            33.3
+          ],
+          [
+            134.5,
+            33.8
+          ],
+          [
+            134.8,
+            34.3
+          ],
+          [
+            135.7,
+            35.6
+          ],
+          [
+            136.4,
+            37.1
+          ],
+          [
+            137.7,
+            39.2
+          ],
+          [
+            139.2,
+            41.3
+          ],
+          [
+            139.9,
+            43.2
+          ],
+          [
+            140.2,
+            45.0
+          ],
+          [
+            139.0,
+            46.5
+          ],
+          [
+            137.5,
+            49.3
+          ],
+          [
+            136.3,
+            51.2
+          ],
+          [
+            136.2,
+            52.8
+          ],
+          [
+            136.5,
+            54.0
+          ],
+          [
+            136.9,
+            54.9
+          ],
+          [
+            137.5,
+            55.7
+          ],
+          [
+            137.8,
+            56.7
+          ],
+          [
+            137.8,
+            58.7
+          ],
+          [
+            136.3,
+            62.1
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-08-26 18:00:00",
+        "grade": "TD",
+        "lat": 11.0,
+        "lon": 160.5,
+        "pressure": 1008,
+        "wind(knot)": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          160.5,
+          11.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-08-27 00:00:00",
+        "grade": "TD",
+        "lat": 11.9,
+        "lon": 159.7,
+        "pressure": 1008,
+        "wind(knot)": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          159.7,
+          11.9
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-08-27 06:00:00",
+        "grade": "TD",
+        "lat": 12.8,
+        "lon": 159.2,
+        "pressure": 1008,
+        "wind(knot)": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          159.2,
+          12.8
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-08-27 12:00:00",
+        "grade": "TD",
+        "lat": 13.6,
+        "lon": 158.9,
+        "pressure": 1008,
+        "wind(knot)": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          158.9,
+          13.6
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-08-27 18:00:00",
+        "grade": "TS",
+        "lat": 14.5,
+        "lon": 157.9,
+        "pressure": 1004,
+        "wind(knot)": 35
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          157.9,
+          14.5
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-08-28 00:00:00",
+        "grade": "TS",
+        "lat": 15.4,
+        "lon": 157.0,
+        "pressure": 1000,
+        "wind(knot)": 40
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          157.0,
+          15.4
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-08-28 06:00:00",
+        "grade": "TS",
+        "lat": 16.2,
+        "lon": 156.3,
+        "pressure": 1000,
+        "wind(knot)": 40
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          156.3,
+          16.2
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-08-28 12:00:00",
+        "grade": "TS",
+        "lat": 16.6,
+        "lon": 155.6,
+        "pressure": 996,
+        "wind(knot)": 45
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          155.6,
+          16.6
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-08-28 18:00:00",
+        "grade": "STS",
+        "lat": 16.7,
+        "lon": 154.4,
+        "pressure": 992,
+        "wind(knot)": 50
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          154.4,
+          16.7
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-08-29 00:00:00",
+        "grade": "STS",
+        "lat": 17.0,
+        "lon": 153.5,
+        "pressure": 990,
+        "wind(knot)": 60
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          153.5,
+          17.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-08-29 06:00:00",
+        "grade": "TY",
+        "lat": 17.3,
+        "lon": 152.3,
+        "pressure": 985,
+        "wind(knot)": 65
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          152.3,
+          17.3
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-08-29 12:00:00",
+        "grade": "TY",
+        "lat": 17.3,
+        "lon": 151.4,
+        "pressure": 980,
+        "wind(knot)": 70
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          151.4,
+          17.3
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-08-29 18:00:00",
+        "grade": "TY",
+        "lat": 17.4,
+        "lon": 150.5,
+        "pressure": 965,
+        "wind(knot)": 80
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          150.5,
+          17.4
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-08-30 00:00:00",
+        "grade": "TY",
+        "lat": 17.6,
+        "lon": 149.1,
+        "pressure": 955,
+        "wind(knot)": 85
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          149.1,
+          17.6
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-08-30 06:00:00",
+        "grade": "TY",
+        "lat": 17.7,
+        "lon": 148.1,
+        "pressure": 940,
+        "wind(knot)": 90
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          148.1,
+          17.7
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-08-30 12:00:00",
+        "grade": "TY",
+        "lat": 17.8,
+        "lon": 146.9,
+        "pressure": 935,
+        "wind(knot)": 95
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          146.9,
+          17.8
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-08-30 18:00:00",
+        "grade": "TY",
+        "lat": 17.8,
+        "lon": 145.4,
+        "pressure": 925,
+        "wind(knot)": 100
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          145.4,
+          17.8
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-08-31 00:00:00",
+        "grade": "TY",
+        "lat": 17.9,
+        "lon": 144.2,
+        "pressure": 915,
+        "wind(knot)": 105
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.2,
+          17.9
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-08-31 06:00:00",
+        "grade": "TY",
+        "lat": 18.3,
+        "lon": 142.7,
+        "pressure": 915,
+        "wind(knot)": 105
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          142.7,
+          18.3
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-08-31 12:00:00",
+        "grade": "TY",
+        "lat": 18.5,
+        "lon": 141.5,
+        "pressure": 915,
+        "wind(knot)": 105
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          141.5,
+          18.5
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-08-31 18:00:00",
+        "grade": "TY",
+        "lat": 19.1,
+        "lon": 140.2,
+        "pressure": 915,
+        "wind(knot)": 105
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.2,
+          19.1
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-09-01 00:00:00",
+        "grade": "TY",
+        "lat": 19.6,
+        "lon": 139.2,
+        "pressure": 915,
+        "wind(knot)": 105
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          139.2,
+          19.6
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-09-01 06:00:00",
+        "grade": "TY",
+        "lat": 20.4,
+        "lon": 138.3,
+        "pressure": 915,
+        "wind(knot)": 105
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          138.3,
+          20.4
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-09-01 12:00:00",
+        "grade": "TY",
+        "lat": 21.0,
+        "lon": 137.3,
+        "pressure": 925,
+        "wind(knot)": 100
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          137.3,
+          21.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-09-01 18:00:00",
+        "grade": "TY",
+        "lat": 21.8,
+        "lon": 136.5,
+        "pressure": 935,
+        "wind(knot)": 95
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          136.5,
+          21.8
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-09-02 00:00:00",
+        "grade": "TY",
+        "lat": 22.7,
+        "lon": 135.8,
+        "pressure": 935,
+        "wind(knot)": 95
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          135.8,
+          22.7
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-09-02 06:00:00",
+        "grade": "TY",
+        "lat": 23.7,
+        "lon": 135.0,
+        "pressure": 935,
+        "wind(knot)": 95
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          135.0,
+          23.7
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-09-02 12:00:00",
+        "grade": "TY",
+        "lat": 24.5,
+        "lon": 134.4,
+        "pressure": 935,
+        "wind(knot)": 95
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          134.4,
+          24.5
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-09-02 18:00:00",
+        "grade": "TY",
+        "lat": 25.5,
+        "lon": 133.8,
+        "pressure": 935,
+        "wind(knot)": 95
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          133.8,
+          25.5
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-09-03 00:00:00",
+        "grade": "TY",
+        "lat": 26.6,
+        "lon": 133.2,
+        "pressure": 940,
+        "wind(knot)": 90
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          133.2,
+          26.6
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-09-03 06:00:00",
+        "grade": "TY",
+        "lat": 27.5,
+        "lon": 132.6,
+        "pressure": 940,
+        "wind(knot)": 90
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          132.6,
+          27.5
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-09-03 12:00:00",
+        "grade": "TY",
+        "lat": 28.6,
+        "lon": 132.6,
+        "pressure": 940,
+        "wind(knot)": 90
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          132.6,
+          28.6
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-09-03 15:00:00",
+        "grade": "TY",
+        "lat": 29.4,
+        "lon": 132.6,
+        "pressure": 945,
+        "wind(knot)": 85
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          132.6,
+          29.4
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-09-03 18:00:00",
+        "grade": "TY",
+        "lat": 30.3,
+        "lon": 132.8,
+        "pressure": 945,
+        "wind(knot)": 85
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          132.8,
+          30.3
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-09-03 21:00:00",
+        "grade": "TY",
+        "lat": 31.3,
+        "lon": 133.2,
+        "pressure": 950,
+        "wind(knot)": 85
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          133.2,
+          31.3
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-09-04 00:00:00",
+        "grade": "TY",
+        "lat": 32.4,
+        "lon": 133.7,
+        "pressure": 950,
+        "wind(knot)": 85
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          133.7,
+          32.4
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-09-04 02:00:00",
+        "grade": "TY",
+        "lat": 33.3,
+        "lon": 134.2,
+        "pressure": 950,
+        "wind(knot)": 85
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          134.2,
+          33.3
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-09-04 03:00:00",
+        "grade": "TY",
+        "lat": 33.8,
+        "lon": 134.5,
+        "pressure": 950,
+        "wind(knot)": 85
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          134.5,
+          33.8
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-09-04 04:00:00",
+        "grade": "TY",
+        "lat": 34.3,
+        "lon": 134.8,
+        "pressure": 955,
+        "wind(knot)": 85
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          134.8,
+          34.3
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-09-04 06:00:00",
+        "grade": "TY",
+        "lat": 35.6,
+        "lon": 135.7,
+        "pressure": 965,
+        "wind(knot)": 75
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          135.7,
+          35.6
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-09-04 09:00:00",
+        "grade": "TY",
+        "lat": 37.1,
+        "lon": 136.4,
+        "pressure": 965,
+        "wind(knot)": 70
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          136.4,
+          37.1
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-09-04 12:00:00",
+        "grade": "TY",
+        "lat": 39.2,
+        "lon": 137.7,
+        "pressure": 970,
+        "wind(knot)": 65
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          137.7,
+          39.2
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-09-04 15:00:00",
+        "grade": "STS",
+        "lat": 41.3,
+        "lon": 139.2,
+        "pressure": 975,
+        "wind(knot)": 50
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          139.2,
+          41.3
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-09-04 18:00:00",
+        "grade": "STS",
+        "lat": 43.2,
+        "lon": 139.9,
+        "pressure": 975,
+        "wind(knot)": 50
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          139.9,
+          43.2
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-09-04 21:00:00",
+        "grade": "STS",
+        "lat": 45.0,
+        "lon": 140.2,
+        "pressure": 975,
+        "wind(knot)": 50
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.2,
+          45.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-09-05 00:00:00",
+        "grade": "L",
+        "lat": 46.5,
+        "lon": 139.0,
+        "pressure": 976,
+        "wind(knot)": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          139.0,
+          46.5
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-09-05 06:00:00",
+        "grade": "L",
+        "lat": 49.3,
+        "lon": 137.5,
+        "pressure": 976,
+        "wind(knot)": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          137.5,
+          49.3
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-09-05 12:00:00",
+        "grade": "L",
+        "lat": 51.2,
+        "lon": 136.3,
+        "pressure": 980,
+        "wind(knot)": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          136.3,
+          51.2
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-09-05 18:00:00",
+        "grade": "L",
+        "lat": 52.8,
+        "lon": 136.2,
+        "pressure": 980,
+        "wind(knot)": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          136.2,
+          52.8
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-09-06 00:00:00",
+        "grade": "L",
+        "lat": 54.0,
+        "lon": 136.5,
+        "pressure": 982,
+        "wind(knot)": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          136.5,
+          54.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-09-06 06:00:00",
+        "grade": "L",
+        "lat": 54.9,
+        "lon": 136.9,
+        "pressure": 984,
+        "wind(knot)": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          136.9,
+          54.9
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-09-06 12:00:00",
+        "grade": "L",
+        "lat": 55.7,
+        "lon": 137.5,
+        "pressure": 986,
+        "wind(knot)": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          137.5,
+          55.7
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-09-06 18:00:00",
+        "grade": "L",
+        "lat": 56.7,
+        "lon": 137.8,
+        "pressure": 990,
+        "wind(knot)": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          137.8,
+          56.7
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-09-07 00:00:00",
+        "grade": "L",
+        "lat": 58.7,
+        "lon": 137.8,
+        "pressure": 992,
+        "wind(knot)": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          137.8,
+          58.7
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "2018-09-07 06:00:00",
+        "grade": "L",
+        "lat": 62.1,
+        "lon": 136.3,
+        "pressure": 996,
+        "wind(knot)": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          136.3,
+          62.1
+        ]
+      }
+    }
+  ],
+  "bbox": [
+    132.6,
+    11.0,
+    160.5,
+    62.1
+  ]
+}

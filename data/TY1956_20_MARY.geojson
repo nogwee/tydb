@@ -1,0 +1,90 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "year": 1956,
+        "number": 20,
+        "name": "MARY"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.0,
+            18.0
+          ],
+          [
+            123.4,
+            18.2
+          ],
+          [
+            123.2,
+            18.0
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "1956-11-16 00:00:00",
+        "grade": "9",
+        "lat": 18.0,
+        "lon": 124.0,
+        "pressure": 995,
+        "wind(knot)": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          124.0,
+          18.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "1956-11-16 06:00:00",
+        "grade": "9",
+        "lat": 18.2,
+        "lon": 123.4,
+        "pressure": 995,
+        "wind(knot)": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          123.4,
+          18.2
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "datetime(UTC)": "1956-11-16 12:00:00",
+        "grade": "9",
+        "lat": 18.0,
+        "lon": 123.2,
+        "pressure": 1002,
+        "wind(knot)": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          123.2,
+          18.0
+        ]
+      }
+    }
+  ],
+  "bbox": [
+    123.2,
+    18.0,
+    124.0,
+    18.2
+  ]
+}
