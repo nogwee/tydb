@@ -9,21 +9,28 @@
 </head>
 <body>
   <div id="app">
+    <!-- サイドバー（CSSの #sidebar を使用） -->
     <aside id="sidebar">
       <div id="sidebar-title">Typhoon Map Viewer</div>
 
       <h3>Layers</h3>
       <label><input type="checkbox" id="chk-trackline" checked> 台風経路</label><br>
       <label><input type="checkbox" id="chk-active"   checked> 台風位置</label><br>
+
       <h3>Layers</h3>
       <label><input type="checkbox" id="chk-precip" checked> 降水(ERA5)</label><br>
       <label><input type="checkbox" id="chk-wind"> 風(ERA5 10m)</label><br>
-      <!-- <label><input type="checkbox" id="chk-rail"> 鉄道運行</label> -->
 
       <h3>Typhoon</h3>
+      <select id="sel-year">
+        <!-- typhoon.js が typhoons.json から動的に埋めます -->
+      </select>
+      <label for="sel-year">年</label>
+      
+      <br>
+      
       <select id="sel-typhoon">
-        <option value="sample-2018" data-wiki="https://ja.wikipedia.org/wiki/平成30年台風第21号">Jebi 2018</option>
-        <option value="sample-2019" data-wiki="https://ja.wikipedia.org/wiki/台風19号_(2019年)">Hagibis 2019</option>
+        <!-- 年選択に応じて動的に埋めます -->
       </select>
 
       <h3>Time(UTC)</h3>
@@ -36,12 +43,14 @@
 
       <h3>Links</h3>
       <div id="typhoon-link">
-        <a id="wiki-link" href="#" target="_blank">Wikipedia</a>
+        <a id="wiki-link" href="#" target="_blank" rel="noopener">Wikipedia</a>
       </div>
     </aside>
 
+    <!-- サイドバー直後にトグルボタン（CSSの隣接セレクタ #sidebar.collapsed + #sidebar-toggle 用） -->
     <button id="sidebar-toggle" aria-label="サイドバーを畳む" aria-expanded="true">≪</button>
 
+    <!-- 地図 -->
     <main id="map"></main>
   </div>
 
