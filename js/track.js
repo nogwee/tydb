@@ -7,34 +7,46 @@ import {
 } from './utils.js';
 
 export async function loadTrack(map, geojsonUrl) {
+  // --- fetch/geojsonパース ---
   const res = await fetch(geojsonUrl, { cache: 'no-cache' });
   if (!res.ok) throw new Error('GeoJSON 読込失敗: ' + res.status + ' (' + geojsonUrl + ')');
   const geo = await res.json();
   map.getSource('track').setData(geo);
 
+  // --- rawPoints生成 ---
   const rawPoints = geo.features
     .filter(f => f.geometry?.type === 'Point')
     .map(f => {
       const p = f.properties || {};
       const dtStr = p["datetime(UTC)"];
-      const time = (dtStr != null) ? toDateAny(dtStr.replace(' ', 'T')) : null;
+      const time = (dtStr != null) ? toDateAny(dtStr.replace(' ', 'T') + 'Z') : null;
       const [lon, lat] = f.geometry.coordinates;
-      return { time, lat:+lat, lon:+lon };
+      return { time, lat:+lat, lon:+lon, _raw: dtStr };
     })
     .filter(d => d.time instanceof Date && !isNaN(d.time))
     .sort((a,b)=>a.time-b.time);
 
   if (!rawPoints.length) throw new Error('Point（観測点）が見つかりません: ' + geojsonUrl);
 
+
+  // --- hourlyTimes生成 ---
   const hourlyTimes  = buildHourlyTimeline(rawPoints[0].time, rawPoints[rawPoints.length-1].time);
+
+  // --- hourlyPoints生成 ---
   const hourlyPoints = [];
   for (const t of hourlyTimes){
     const {i0,i1} = findBracket(rawPoints, t);
     const A = rawPoints[i0], B = rawPoints[i1];
     const gap = diffHours(B.time, A.time);
-    if (gap > 0 && gap <= 9){
-      const f = diffHours(t, A.time) / gap;
-      const {lat,lon} = lerpPos(A,B,f);
+    if (gap >= 0 && gap <= 9){
+      let lat, lon;
+      if (gap === 0) {
+        lat = A.lat;
+        lon = A.lon;
+      } else {
+        const f = diffHours(t, A.time) / gap;
+        ({lat, lon} = lerpPos(A, B, f));
+      }
       hourlyPoints.push({ time:t, lat, lon });
     }
   }

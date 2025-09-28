@@ -14,7 +14,7 @@ export function toDateAny(v){
 
 export function buildHourlyTimeline(startTime, endTime){
   const out = [];
-  const t0 = new Date(Math.ceil(startTime.getTime()/HOUR)*HOUR);
+  const t0 = startTime;
   for (let t=t0.getTime(); t<=endTime.getTime(); t+=HOUR) out.push(new Date(t));
   return out;
 }

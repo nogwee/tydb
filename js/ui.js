@@ -75,17 +75,19 @@ export function addHourStepButtons(onStep){
     wrap.appendChild(btnNext);
   }
 
-  const getIdx = () => (Number(slider.value) | 0);
-  const maxIdx = () => (Number(slider.max)   | 0);
+  const getMin = () => Number(slider.min) || 0;
+  const getIdx = () => Number(slider.value) || getMin();
+  const maxIdx = () => Number(slider.max) || getMin();
   const setIdx = (i) => {
-    const clamped = Math.max(0, Math.min(i, maxIdx()));
+    const min = getMin(), max = maxIdx();
+    const clamped = Math.max(min, Math.min(i, max));
     slider.value = String(clamped);
     onStep(clamped);
     updateButtonsDisabled();
   };
   function updateButtonsDisabled(){
-    const i = getIdx(), m = maxIdx();
-    btnPrev.disabled = (i <= 0);
+    const i = getIdx(), min = getMin(), m = maxIdx();
+    btnPrev.disabled = (i <= min);
     btnNext.disabled = (i >= m);
   }
 
@@ -93,6 +95,7 @@ export function addHourStepButtons(onStep){
   btnNext.addEventListener('click', () => setIdx(getIdx() + 1));
   slider.addEventListener('input', updateButtonsDisabled);
   setTimeout(updateButtonsDisabled, 0);
+  return updateButtonsDisabled;
 
   // ←/→ キー
   document.addEventListener('keydown', (e) => {

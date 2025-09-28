@@ -6,9 +6,8 @@ import { loadManifest, populateYearSelect, populateTyphoonSelect, updateWikiLink
 import { loadTrack, ensureActiveLayers, setActivePosition, startPulse, stopPulse, toggleActive } from './track.js';
 import { initPrecip, setPrecipTime } from './overlay_precip.js';
 import { els, setTimeLabel, bindLayerToggles, bindSidebarToggle, addHourStepButtons } from './ui.js';
-import { resolveGeojsonPath } from './utils.js';
+import { resolveGeojsonPath, setLayerVisibility } from './utils.js';
 
-const INITIAL_PRECIP_KEY = "20180903T0000Z";
 
 let map;
 let STATE = {
@@ -48,6 +47,12 @@ async function applyTyphoon(id){
   ensureActiveLayers(map, hourlyPoints[0]);
   setActivePosition(map, hourlyPoints[0].lat, hourlyPoints[0].lon);
   setActiveTime(0);
+
+  // ±1hボタンの有効/無効状態を再評価
+  if (window.updateHourStepButtons) window.updateHourStepButtons();
+
+  // アクティブ表示ONなら波紋アニメーション開始
+  if (els.chkActive.checked) startPulse(map);
 
   // Wiki
   updateWikiLink(els.wiki, meta);
@@ -92,10 +97,15 @@ async function bootstrap(){
     populateTyphoonSelect(els.selTy, byYear, els.selYear.value);
     if (initialId) els.selTy.value = initialId;
 
-    if (initialId) await applyTyphoon(initialId);
-
-    // 降水オーバーレイ初期化（可視/不可視はトグルで制御）
-    initPrecip(map, INITIAL_PRECIP_KEY);
+    if (initialId) {
+      await applyTyphoon(initialId);
+      // 台風・時刻に連動した降水オーバーレイ初期化
+      const precipKey = STATE.PRECIP_KEYS[0];
+      if (precipKey) {
+        initPrecip(map, precipKey);
+        setLayerVisibility(map, 'precip-img', els.chkPre.checked);
+      }
+    }
 
     // レイヤ順序最後へ（前景にトラック等を残す）
     ['track-line','track-points','active-point','active-pulse'].forEach(id => {
@@ -116,7 +126,7 @@ async function bootstrap(){
 
   // スライダー・±1h・矢印キー
   els.slider.addEventListener('input', e => setActiveTime(Number(e.target.value)));
-  addHourStepButtons((i) => setActiveTime(i));
+  window.updateHourStepButtons = addHourStepButtons((i) => setActiveTime(i));
 
   // 年→台風
   els.selYear.addEventListener('change', async () => {
