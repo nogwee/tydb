@@ -6,7 +6,7 @@
         {
           "id": "TY2018_21_JEBI",
           "name": "Jebi 2018",
-          "geojson": "../data/geojson/TY2018_21_JEBI.geojson",
+          "geojson": "./data/geojson/TY2018_21_JEBI.geojson",
           "wiki": "https://ja.wikipedia.org/wiki/平成30年台風第21号"
         }
       ]
@@ -17,7 +17,7 @@
         {
           "id": "TY2019_19_HAGIBIS",
           "name": "Hagibis 2019",
-          "geojson": "../data/geojson/TY2019_19_HAGIBIS.geojson",
+          "geojson": "./data/geojson/TY2019_19_HAGIBIS.geojson",
           "wiki": "https://ja.wikipedia.org/wiki/台風19号_(2019年)"
         }
       ]
