@@ -27,7 +27,7 @@ export function createMap() {
           layout:{ visibility:'visible' } }
       ]
     },
-    center:[139.7,35.6], zoom:3
+    center:[139.7,35.6], zoom:4
   });
   return map;
 }

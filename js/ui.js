@@ -1,3 +1,55 @@
+// 降水カラーバーのラベル値
+const JMA_RAIN_LABELS = ["1", "5", "10", "20", "30", "50", "80"];
+const JMA_RAIN_COLORS = [
+    [242, 242, 255],  // 0–1
+    [160, 210, 255],  // 1–5
+    [33, 140, 255],   // 5–10
+    [0, 65, 255],     // 10–20
+    [250, 245, 0],    // 20–30
+    [255, 153, 0],    // 30–50
+    [255, 40, 0],     // 50–80
+    [180, 0, 104],    // 80
+];
+
+function renderPrecipColorbar() {
+  const bar = document.getElementById('precip-colorbar');
+  if (!bar) return;
+  // 離散ブロック
+  bar.innerHTML = '';
+  for (let i = 0; i < JMA_RAIN_COLORS.length; i++) {
+    const c = JMA_RAIN_COLORS[i];
+    const div = document.createElement('div');
+    div.className = 'precip-colorbar-block';
+    div.style.background = `rgb(${c[0]},${c[1]},${c[2]})`;
+    bar.appendChild(div);
+  }
+  // ラベル（区間比率で正確に配置）
+  let labelDiv = document.getElementById('precip-colorbar-labels');
+  if (!labelDiv) {
+    labelDiv = document.createElement('div');
+    labelDiv.id = 'precip-colorbar-labels';
+    bar.after(labelDiv);
+  }
+  // 等間隔配置: 8ブロック→7ラベル
+  const n = JMA_RAIN_COLORS.length;
+  let html = '';
+  for (let i = 1; i < n; i++) {
+    // i=1～7, ラベルは各ブロックの右端
+    let pct = (i / n) * 100;
+    // 全体的に少し左寄せ
+    html += `<span style="position:absolute;left:calc(${pct}% - 21px);min-width:24px;text-align:center;">${JMA_RAIN_LABELS[i-1]}</span>`;
+  }
+  labelDiv.innerHTML = html;
+  labelDiv.style.position = 'relative';
+  labelDiv.style.height = '16px';
+}
+
+function setPrecipColorbarVisible(visible) {
+  const bar = document.getElementById('precip-colorbar');
+  const labels = document.getElementById('precip-colorbar-labels');
+  if (bar) bar.style.display = visible ? '' : 'none';
+  if (labels) labels.style.display = visible ? 'flex' : 'none';
+}
 // ===== ui.js =====
 // DOM 参照と UI バインド（トグル、サイドバー、±1hボタン、キー操作）
 
@@ -21,7 +73,11 @@ export function setTimeLabel(text){ els.label.textContent = text; }
 
 export function bindLayerToggles(map){
   // 降水
-  const applyPre = () => setLayerVisibility(map, 'precip-img', els.chkPre.checked);
+  renderPrecipColorbar();
+  const applyPre = () => {
+    setLayerVisibility(map, 'precip-tile', els.chkPre.checked);
+    setPrecipColorbarVisible(els.chkPre.checked);
+  };
   els.chkPre.addEventListener('change', applyPre);
   map.on('load', applyPre);
 
