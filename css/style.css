@@ -55,6 +55,10 @@ input[type="checkbox"] {
   accent-color: #394e86;
 }
 
+input[type="range"] {
+  accent-color: #394e86; /* モダンブラウザで使える簡単な方法 */
+}
+
 /* トグルボタン（サイドバー端に沿わせる） */
 #sidebar-toggle {
   position: absolute;
