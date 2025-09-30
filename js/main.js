@@ -4,7 +4,7 @@
 import { createMap } from './map.js';
 import { loadManifest, populateYearSelect, populateTyphoonSelect, updateWikiLink } from './manifest.js';
 import { loadTrack, ensureActiveLayers, setActivePosition, startPulse, stopPulse, toggleActive } from './track.js';
-import { initPrecip, setPrecipTime } from './precip_tile.js';
+import { initPrecip, setPrecipTime } from './overlay_precip.js';
 import { els, setTimeLabel, bindLayerToggles, bindSidebarToggle, addHourStepButtons } from './ui.js';
 import { resolveGeojsonPath, setLayerVisibility } from './utils.js';
 
@@ -101,9 +101,10 @@ async function bootstrap(){
       await applyTyphoon(initialId);
       // 台風・時刻に連動した降水オーバーレイ初期化
       const precipKey = STATE.PRECIP_KEYS[0];
-      // 降水タイルレイヤ初期化
-      initPrecip(map);
-      setLayerVisibility(map, 'precip-tile', els.chkPre.checked);
+      if (precipKey) {
+        initPrecip(map, precipKey);
+        setLayerVisibility(map, 'precip-img', els.chkPre.checked);
+      }
     }
 
     // レイヤ順序最後へ（前景にトラック等を残す）
