@@ -75,7 +75,7 @@ export function bindLayerToggles(map){
   // 降水
   renderPrecipColorbar();
   const applyPre = () => {
-    setLayerVisibility(map, 'precip-tile', els.chkPre.checked);
+    setLayerVisibility(map, 'precip-img', els.chkPre.checked);
     setPrecipColorbarVisible(els.chkPre.checked);
   };
   els.chkPre.addEventListener('change', applyPre);
@@ -160,4 +160,97 @@ export function addHourStepButtons(onStep){
     if (e.key === 'ArrowLeft')  { e.preventDefault(); setIdx(getIdx() - 1); }
     if (e.key === 'ArrowRight') { e.preventDefault(); setIdx(getIdx() + 1); }
   });
+}
+
+// ==== カーソル座標コントロール（フォントで解決版） ====
+export class CursorPosControl {
+  constructor({
+    format = 'deg',        // 'deg' | 'dms'
+    precision = 5,         // 小数（deg時）
+    secPrecision = 1,      // 秒の小数（dms時）
+    order = 'latlng',      // 'latlng' | 'lnglat'
+    labels = false         // 'lat' 'lon' ラベルを付けるか
+  } = {}) {
+    this.format = format;
+    this.precision = precision;
+    this.secPrecision = secPrecision;
+    this.order = order;
+    this.labels = labels;
+  }
+
+  onAdd(map) {
+    this._map = map;
+
+    this._container = document.createElement('div');
+    this._container.className = 'maplibregl-ctrl maplibregl-ctrl-group';
+
+    this._label = document.createElement('div');
+    // ★ フォント設定：Inter + tabular-nums（数字等幅）。カーニング有効
+    this._label.style.padding = '2px 6px';
+    this._label.style.whiteSpace = 'nowrap';
+    this._label.style.fontFamily =
+      `'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans JP', sans-serif`;
+    this._label.style.fontKerning = 'normal';
+    this._label.style.fontVariantNumeric = 'tabular-nums';
+    this._label.textContent = '—, —';
+    this._container.appendChild(this._label);
+
+    this._onMove = (e) => {
+      const ll = e.lngLat.wrap();
+      const lat = ll.lat, lng = ll.lng;
+
+      const sLat = (this.format === 'dms') ? this._toDMSText(lat, 'lat') : this._toDegText(lat, 'lat');
+      const sLng = (this.format === 'dms') ? this._toDMSText(lng, 'lng') : this._toDegText(lng, 'lng');
+      const pair = (this.order === 'latlng') ? [sLat, sLng] : [sLng, sLat];
+
+      if (this.labels) {
+        this._label.textContent =
+          (this.order === 'latlng')
+            ? `lat ${pair[0]}, lon ${pair[1]}`
+            : `lon ${pair[0]}, lat ${pair[1]}`;
+      } else {
+        // ご要望の "35.6°N, 139.7°E" 形式（textContentなので余計なスペースは入れません）
+        this._label.textContent = `${pair[0]}, ${pair[1]}`;
+      }
+    };
+    this._onLeave = () => { this._label.textContent = '—, —'; };
+
+    map.on('mousemove', this._onMove);
+    map.getCanvas().addEventListener('mouseleave', this._onLeave);
+    return this._container;
+  }
+
+  onRemove() {
+    this._map.off('mousemove', this._onMove);
+    this._map.getCanvas().removeEventListener('mouseleave', this._onLeave);
+    this._container.remove();
+    this._map = undefined;
+  }
+
+  _hemi(v, type) { return (type === 'lat') ? (v >= 0 ? 'N' : 'S') : (v >= 0 ? 'E' : 'W'); }
+
+  _toDegText(value, type) {
+    const hemi = this._hemi(value, type);
+    const abs  = Math.abs(value);
+    // 例: 35.67890°N
+    return `${abs.toFixed(this.precision)}°${hemi}`;
+  }
+
+  _toDMSText(value, type) {
+    const hemi = this._hemi(value, type);
+    const abs  = Math.abs(value);
+    const deg  = Math.floor(abs);
+    const minF = (abs - deg) * 60;
+    const min  = Math.floor(minF);
+    const sec  = (minF - min) * 60;
+    // 例: 35°40'44.4"N
+    return `${deg}°${String(min).padStart(2,'0')}'${sec.toFixed(this.secPrecision)}"${hemi}`;
+  }
+}
+
+// 右上に追加（既存の呼び出しのままでOK）
+export function mountCursorPosControl(map, opts = {}) {
+  const ctrl = new CursorPosControl(opts);
+  map.addControl(ctrl, 'top-right');
+  return ctrl;
 }

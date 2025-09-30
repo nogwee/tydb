@@ -6,6 +6,9 @@
   <title>Typhoon Map</title>
   <link href="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css" rel="stylesheet" />
   <link rel="stylesheet" href="./css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400&display=swap" rel="stylesheet">
 </head>
 <body>
   <div id="app">
@@ -13,26 +16,33 @@
     <aside id="sidebar">
       <div id="sidebar-title">Typhoon Map Viewer</div>
 
-      <h3>Layers</h3>
+      <h3>Typhoon</h3>
+      <div class="typhoon-row">
+        <div class="field-year">
+          <label for="sel-year" class="field-label">Year</label>
+          <select id="sel-year" class="select-underline"></select>
+        </div>
+
+        <div class="field-number">
+          <label for="sel-typhoon" class="field-label">Number</label>
+          <select id="sel-typhoon" class="select-underline"></select>
+        </div>
+      </div>
+
+      <hr>
+
+      <h3>Track</h3>
       <label><input type="checkbox" id="chk-trackline" checked> 台風経路（気象庁ベストトラック）</label><br>
       <label><input type="checkbox" id="chk-active"   checked> 台風位置</label><br>
+
+      <hr>
 
       <h3>Layers</h3>
       <label><input type="checkbox" id="chk-precip" checked> 降水(ERA5)</label><br>
       <div id="precip-colorbar" style="margin:6px 0 2px 0;"></div>
       <!-- <label><input type="checkbox" id="chk-wind"> 風(ERA5 10m)</label><br> -->
 
-      <h3>Typhoon</h3>
-      <select id="sel-year">
-        <!-- typhoon.js が typhoons.json から動的に埋めます -->
-      </select>
-      <label for="sel-year">年</label>
-      
-      <br>
-      
-      <select id="sel-typhoon">
-        <!-- 年選択に応じて動的に埋めます -->
-      </select>
+      <hr>
 
       <h3>Time(UTC)</h3>
       <div id="time-row">
@@ -41,6 +51,8 @@
       <div id="time-label">
         <span id="label">0</span>
       </div>
+
+      <hr>
 
       <h3>Links</h3>
       <div id="typhoon-link">

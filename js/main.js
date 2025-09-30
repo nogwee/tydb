@@ -5,7 +5,7 @@ import { createMap } from './map.js';
 import { loadManifest, populateYearSelect, populateTyphoonSelect, updateWikiLink } from './manifest.js';
 import { loadTrack, ensureActiveLayers, setActivePosition, startPulse, stopPulse, toggleActive } from './track.js';
 import { initPrecip, setPrecipTime } from './overlay_precip.js';
-import { els, setTimeLabel, bindLayerToggles, bindSidebarToggle, addHourStepButtons } from './ui.js';
+import { els, setTimeLabel, bindLayerToggles, bindSidebarToggle, addHourStepButtons, mountCursorPosControl } from './ui.js';
 import { resolveGeojsonPath, setLayerVisibility } from './utils.js';
 
 
@@ -63,6 +63,9 @@ async function applyTyphoon(id){
 
 async function bootstrap(){
   map = createMap();
+
+  // カーソル座標を右上に常時表示（小数5桁。度分秒にしたければ { dms:true }）
+  mountCursorPosControl(map, { precision: 4 });
 
   map.on('load', async () => {
     // マニフェスト読込 → 年/台風セレクト初期化
