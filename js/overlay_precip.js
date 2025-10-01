@@ -10,7 +10,7 @@ const BOUNDS = [
   [GRID.maxLon + GRID.dLon/2, southEdgeLat], // bottom-right
   [GRID.minLon - GRID.dLon/2, southEdgeLat], // bottom-left
 ];
-const PRECIP_PNG = (key) => `./overlays/precip_${key}.png`;
+const PRECIP_PNG = (key) => `./overlays/precip/precip_${key}.png`;
 
 export function initPrecip(map, initialKey) {
   const id = 'precip-img';

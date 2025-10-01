@@ -11,6 +11,24 @@
       "items": [
         { "id": "TY2019_19_HAGIBIS", "name": "#19 HAGIBIS", "geojson": "./data/geojson/TY2019_19_HAGIBIS.geojson", "wiki": "https://ja.wikipedia.org/wiki/令和元年東日本台風" }
       ]
+    },
+    {
+      "label": "2020",
+      "items": [
+        { "id": "TY2020_10_HAISHEN", "name": "#10 HAISHEN", "geojson": "./data/geojson/TY2020_10_HAISHEN.geojson", "wiki": "https://ja.wikipedia.org/wiki/令和2年台風第10号" }
+      ]
+    },
+    {
+      "label": "2022",
+      "items": [
+        { "id": "TY2022_14_NANMADOL", "name": "#14 NANMADOL", "geojson": "./data/geojson/TY2022_14_NANMADOL.geojson", "wiki": "https://ja.wikipedia.org/wiki/令和4年台風第14号" }
+      ]
+    },
+    {
+      "label": "2023",
+      "items": [
+        { "id": "TY2023_13_YUN-YEUNG", "name": "#13 YUN-YEUNG", "geojson": "./data/geojson/TY2023_13_YUN-YEUNG.geojson", "wiki": "https://ja.wikipedia.org/wiki/令和5年台風第13号" }
+      ]
     }
   ],
   "defaultId": "TY2018_21_JEBI"

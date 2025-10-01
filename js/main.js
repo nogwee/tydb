@@ -5,6 +5,7 @@ import { createMap } from './map.js';
 import { loadManifest, populateYearSelect, populateTyphoonSelect, updateWikiLink } from './manifest.js';
 import { loadTrack, ensureActiveLayers, setActivePosition, startPulse, stopPulse, toggleActive } from './track.js';
 import { initPrecip, setPrecipTime } from './overlay_precip.js';
+import { initGust, setGustTime } from './overlay_gust.js';
 import { els, setTimeLabel, bindLayerToggles, bindSidebarToggle, addHourStepButtons, mountCursorPosControl } from './ui.js';
 import { resolveGeojsonPath, setLayerVisibility } from './utils.js';
 
@@ -25,7 +26,10 @@ function setActiveTime(index){
   setActivePosition(map, p.lat, p.lon);
   setTimeLabel(STATE.TIME_TEXTS[index] || String(index));
   const key = STATE.PRECIP_KEYS[index];
-  if (key) setPrecipTime(map, key);
+  if (key) {
+    setPrecipTime(map, key);
+    setGustTime(map, key);
+  }
 }
 
 async function applyTyphoon(id){
@@ -102,11 +106,18 @@ async function bootstrap(){
 
     if (initialId) {
       await applyTyphoon(initialId);
+
       // 台風・時刻に連動した降水オーバーレイ初期化
       const precipKey = STATE.PRECIP_KEYS[0];
       if (precipKey) {
         initPrecip(map, precipKey);
         setLayerVisibility(map, 'precip-img', els.chkPre.checked);
+      }
+
+      // 台風・時刻に連動した突風オーバーレイ初期化
+      if (precipKey) {
+        initGust(map, precipKey);
+        setLayerVisibility(map, 'gust-img', els.chkGust.checked);
       }
     }
 

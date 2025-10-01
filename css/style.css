@@ -1,7 +1,10 @@
-#precip-colorbar {
+/* =========================
+   共通：カラーバー（降水・突風）
+   ========================= */
+.colorbar {
   width: 92%;
   height: 8px;
-  margin: 0 auto 0 auto;
+  margin: 0 auto;
   border-radius: 6px;
   border: 1px solid #bbb;
   display: flex;
@@ -9,39 +12,56 @@
   position: relative;
 }
 
-.precip-colorbar-block {
+/* 既存のIDにも共通スタイルを適用 */
+#precip-colorbar { width: 92%; height: 8px; margin: 0 auto; border-radius: 6px; border: 1px solid #bbb; display: flex; overflow: hidden; position: relative; }
+#gust-colorbar   { width: 92%; height: 8px; margin: 6px auto 0 auto; border-radius: 6px; border: 1px solid #bbb; display: flex; overflow: hidden; position: relative; }
+
+/* 共通ブロック */
+.colorbar-block,
+.precip-colorbar-block { /* 後方互換（JSが古いクラスでもOKに） */
   flex: 1 1 0;
   height: 100%;
 }
 
-#precip-colorbar-labels {
+/* 共通：ラベル行（子spanはabsoluteで配置） */
+.colorbar-labels {
   font-size: 10px;
   color: #333;
   pointer-events: none;
   width: 92%;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 0 auto;
   line-height: 1.0;
   position: relative;
   height: 12px;
-  margin-top: 0px;
+  /* 表示切替はJSで block/none にする */
 }
 
-/* レイアウト：左にサイドバー、右に地図 */
+.colorbar-block.transparent {
+  background: repeating-conic-gradient(#ccc 0% 25%, transparent 0% 50%) 
+              50% / 8px 8px;
+}
+
+/* 既存のIDにも共通ラベルスタイルを適用 */
+#precip-colorbar-labels { font-size: 10px; color: #333; pointer-events: none; width: 92%; margin: 0 auto; line-height: 1.0; position: relative; height: 12px; }
+#gust-colorbar-labels   { font-size: 10px; color: #333; pointer-events: none; width: 92%; margin: 0 auto; line-height: 1.0; position: relative; height: 12px; }
+
+/* =========================
+   レイアウト：左にサイドバー、右に地図
+   ========================= */
 html, body, #app { height: 100%; margin: 0; }
 #app { display: flex; position: relative; }
 
 /* サイドバー */
 #sidebar {
-    width: 260px;
-    padding: 12px;
-    background: #f6f6f6;
-    border-right: 1px solid #ddd;
-    overflow: auto;
-    font-family: system-ui, sans-serif;
-    position: relative;
-    z-index: 2; /* 地図より前面 */
-    transition: width .25s ease, padding .25s ease;
+  width: 260px;
+  padding: 12px;
+  background: #f6f6f6;
+  border-right: 1px solid #ddd;
+  overflow: auto;
+  font-family: system-ui, sans-serif;
+  position: relative;
+  z-index: 2; /* 地図より前面 */
+  transition: width .25s ease, padding .25s ease;
 }
 
 #sidebar.collapsed {
@@ -51,13 +71,9 @@ html, body, #app { height: 100%; margin: 0; }
   border-right: none;
 }
 
-input[type="checkbox"] {
-  accent-color: #394e86;
-}
-
-input[type="range"] {
-  accent-color: #394e86; /* モダンブラウザで使える簡単な方法 */
-}
+/* 入力UIアクセント色 */
+input[type="checkbox"] { accent-color: #394e86; }
+input[type="range"]    { accent-color: #394e86; }
 
 /* トグルボタン（サイドバー端に沿わせる） */
 #sidebar-toggle {
@@ -75,9 +91,8 @@ input[type="range"] {
 }
 
 /* サイドバーが畳まれたときのボタン位置・表示 */
-#sidebar.collapsed + #sidebar-toggle {
-  left: 10px;      /* 左端に寄せる */
-}
+#sidebar.collapsed + #sidebar-toggle { left: 10px; }
+
 #sidebar h3 { margin: 8px 0; font-size: 16px; }
 #sidebar label { display: inline-flex; gap: 6px; align-items: center; margin: 4px 0; }
 
@@ -89,7 +104,7 @@ input[type="range"] {
   padding: 12px 8px;
   background: #394e86;
   border-bottom: 1px solid #ccc;
-  margin:  -12px -12px 12px -12px;
+  margin: -12px -12px 12px -12px;
 }
 
 /* 横並び＋中央寄せの行 */
@@ -103,15 +118,11 @@ input[type="range"] {
 
 /* 各フィールドの箱（縦積み：ラベル→セレクト） */
 #sidebar .typhoon-row .field-year{
-  display:flex;
-  flex-direction:column;
+  display:flex; flex-direction:column;
   min-width: 2.5em;        /* お好みで調整 */
 }
-
-/* 各フィールドの箱（縦積み：ラベル→セレクト） */
 #sidebar .typhoon-row .field-number{
-  display:flex;
-  flex-direction:column;
+  display:flex; flex-direction:column;
   min-width: 8.5em;        /* お好みで調整 */
 }
 
@@ -126,10 +137,10 @@ input[type="range"] {
 
 /* 地図エリア */
 #map {
-    flex: 1;
-    min-width: 0;
-    position: relative;
-    z-index: 1; /* サイドバーより背面 */
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  z-index: 1; /* サイドバーより背面 */
 }
 
 /* スライダーのラベル */
@@ -140,27 +151,15 @@ input[type="range"] {
 }
 #time-label { margin-top: 4px; text-align: center; }
 
-#label {
-  white-space: nowrap;
-  margin-left: 0;
-}
+#label { white-space: nowrap; margin-left: 0; }
 
-#typhoon-link {
-  margin-top: 8px;
-}
-#typhoon-link a {
-  color: #0066cc;
-  text-decoration: none;
-}
-#typhoon-link a:hover {
-  text-decoration: underline;
-}
+#typhoon-link { margin-top: 8px; }
+#typhoon-link a { color: #0066cc; text-decoration: none; }
+#typhoon-link a:hover { text-decoration: underline; }
 
-.maplibregl-canvas {
-  cursor: default !important;
-}
+.maplibregl-canvas { cursor: default !important; }
 
-/* 下線のみのセレクト（以前のクラス版をそのまま流用） */
+/* 下線のみのセレクト */
 .select-underline{
   appearance:none; -webkit-appearance:none; -moz-appearance:none;
   background:transparent;
@@ -192,4 +191,10 @@ input[type="range"] {
 /* （任意）狭幅時は折り返しにする */
 @media (max-width: 380px){
   #sidebar .typhoon-row{ flex-wrap:wrap; }
+}
+
+/* 初期ロード時のチラ見え防止（gustはデフォ非表示） */
+#gust-colorbar,
+#gust-colorbar-labels {
+  display: none;
 }

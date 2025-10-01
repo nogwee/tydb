@@ -11,6 +11,19 @@ const JMA_RAIN_COLORS = [
     [180, 0, 104],    // 80
 ];
 
+// 突風カラーバー
+const GUST_LABELS = ["10", "15", "20", "25", "30", "35", "40"]; // 6個
+const GUST_COLORS = [
+  "transparent",   // 0–10（透明） ← CSS側でチェック柄を当てる
+  [229, 243, 255], // 0–15
+  [178, 223, 138], // 15–20
+  [51, 160, 44],   // 20–25
+  [255, 127, 0],   // 25–30
+  [227, 26, 28],   // 30–35
+  [166, 0, 132],   // 35–40
+  [90,  0,  90],   // 40+
+];
+
 function renderPrecipColorbar() {
   const bar = document.getElementById('precip-colorbar');
   if (!bar) return;
@@ -19,7 +32,7 @@ function renderPrecipColorbar() {
   for (let i = 0; i < JMA_RAIN_COLORS.length; i++) {
     const c = JMA_RAIN_COLORS[i];
     const div = document.createElement('div');
-    div.className = 'precip-colorbar-block';
+    div.className = 'colorbar-block';
     div.style.background = `rgb(${c[0]},${c[1]},${c[2]})`;
     bar.appendChild(div);
   }
@@ -47,10 +60,53 @@ function renderPrecipColorbar() {
 function setPrecipColorbarVisible(visible) {
   const bar = document.getElementById('precip-colorbar');
   const labels = document.getElementById('precip-colorbar-labels');
-  if (bar) bar.style.display = visible ? '' : 'none';
-  if (labels) labels.style.display = visible ? 'flex' : 'none';
+  if (bar) bar.style.display = visible ? 'flex' : 'none';
+  if (labels) labels.style.display = visible ? 'block' : 'none';
 }
-// ===== ui.js =====
+
+function renderGustColorbar() {
+  const bar = document.getElementById('gust-colorbar');
+  if (!bar) return;
+  bar.innerHTML = '';
+  for (let i = 0; i < GUST_COLORS.length; i++) {
+    const c = GUST_COLORS[i];
+    const div = document.createElement('div');
+    div.className = 'colorbar-block'; // 共通クラス利用
+
+    if (c === 'transparent') {
+      div.classList.add('transparent'); // 透明部分はチェック柄
+    } else if (Array.isArray(c)) {
+      // 通常ブロックは着色
+      div.style.background = `rgb(${c[0]},${c[1]},${c[2]})`;
+    }
+
+    bar.appendChild(div);
+  }
+  let labelDiv = document.getElementById('gust-colorbar-labels');
+  if (!labelDiv) {
+    labelDiv = document.createElement('div');
+    labelDiv.id = 'gust-colorbar-labels';
+    bar.after(labelDiv);
+  }
+  const n = GUST_COLORS.length;
+  let html = '';
+  for (let i = 1; i < n; i++) {
+    let pct = (i / n) * 100;
+    html += `<span style="position:absolute;left:calc(${pct}% - 21px);min-width:24px;text-align:center;">${GUST_LABELS[i-1]}</span>`;
+  }
+  labelDiv.innerHTML = html;
+  labelDiv.style.position = 'relative';
+  labelDiv.style.height = '16px';
+}
+
+function setGustColorbarVisible(visible) {
+  const bar = document.getElementById('gust-colorbar');
+  const labels = document.getElementById('gust-colorbar-labels');
+  if (bar) bar.style.display = visible ? 'flex' : 'none';
+  if (labels) labels.style.display = visible ? 'block' : 'none';
+}
+
+// ==== UI コントロール群 ====
 // DOM 参照と UI バインド（トグル、サイドバー、±1hボタン、キー操作）
 
 import { setLayerVisibility } from './utils.js';
@@ -61,7 +117,7 @@ export const els = {
   selYear:document.getElementById('sel-year'),
   selTy:  document.getElementById('sel-typhoon'),
   chkPre: document.getElementById('chk-precip'),
-  chkWin: document.getElementById('chk-wind'),
+  chkGust:document.getElementById('chk-gust'),
   chkTrackLine: document.getElementById('chk-trackline'),
   chkActive: document.getElementById('chk-active'),
   wiki:   document.getElementById('wiki-link'),
@@ -74,12 +130,52 @@ export function setTimeLabel(text){ els.label.textContent = text; }
 export function bindLayerToggles(map){
   // 降水
   renderPrecipColorbar();
+  renderGustColorbar();
+
   const applyPre = () => {
-    setLayerVisibility(map, 'precip-img', els.chkPre.checked);
+    if (map.getLayer('precip-img')) setLayerVisibility(map, 'precip-img', els.chkPre.checked);
     setPrecipColorbarVisible(els.chkPre.checked);
+    if (els.chkPre.checked) setGustColorbarVisible(false);
   };
-  els.chkPre.addEventListener('change', applyPre);
-  map.on('load', applyPre);
+
+  // 突風
+  const applyGust = () => {
+    if (map.getLayer('gust-img')) setLayerVisibility(map, 'gust-img', els.chkGust?.checked);
+    setGustColorbarVisible(!!els.chkGust?.checked);
+    if (els.chkGust?.checked) setPrecipColorbarVisible(false); // 排他表示
+  };
+
+  // 排他（ただし両方OFFは許可）
+  els.chkPre.addEventListener('change', () => {
+    if (els.chkPre.checked && els.chkGust?.checked) {
+      els.chkGust.checked = false;
+      applyGust();
+    }
+    applyPre();
+  });
+  if (els.chkGust) {
+    els.chkGust.addEventListener('change', () => {
+      if (els.chkGust.checked && els.chkPre.checked) {
+        els.chkPre.checked = false;
+        applyPre();
+      }
+      applyGust();
+      if (!els.chkGust.checked && !els.chkPre.checked) {
+        // 両方OFF時は両方のバーを消す
+        setPrecipColorbarVisible(false);
+        setGustColorbarVisible(false);
+      }
+    });
+  }
+  // 初期反映（現状を尊重。両方OFFなら両方のバーOFF）
+  map.on('load', () => {
+    applyPre();
+    applyGust();
+    if (!els.chkPre.checked && !els.chkGust?.checked) {
+      setPrecipColorbarVisible(false);
+      setGustColorbarVisible(false);
+    }
+  });
 
   // トラック（線・点）
   const setMulti = on => ['track-line','track-points'].forEach(id=>setLayerVisibility(map,id,on));
@@ -150,8 +246,8 @@ export function addHourStepButtons(onStep){
   btnPrev.addEventListener('click', () => setIdx(getIdx() - 1));
   btnNext.addEventListener('click', () => setIdx(getIdx() + 1));
   slider.addEventListener('input', updateButtonsDisabled);
+
   setTimeout(updateButtonsDisabled, 0);
-  return updateButtonsDisabled;
 
   // ←/→ キー
   document.addEventListener('keydown', (e) => {
@@ -160,6 +256,7 @@ export function addHourStepButtons(onStep){
     if (e.key === 'ArrowLeft')  { e.preventDefault(); setIdx(getIdx() - 1); }
     if (e.key === 'ArrowRight') { e.preventDefault(); setIdx(getIdx() + 1); }
   });
+  return updateButtonsDisabled;
 }
 
 // ==== カーソル座標コントロール（フォントで解決版） ====
