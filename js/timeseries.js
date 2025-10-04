@@ -30,6 +30,132 @@ function ll2px(lon, lat) {
   return { x: col, y: row };
 }
 
+const SEC_MIN = 60;
+const SEC_HOUR = 60 * SEC_MIN;
+const SEC_DAY = 24 * SEC_HOUR;
+const TARGET_TICKS = 8;
+const AXIS_FONT = '10px "Inter", sans-serif';
+const AXIS_LINE_HEIGHT = 0.92;
+const PLOT_PADDING_TOP = 12;
+const PLOT_PADDING_BOTTOM = 6;
+const TICK_STEPS = [
+  5 * SEC_MIN,
+  10 * SEC_MIN,
+  15 * SEC_MIN,
+  30 * SEC_MIN,
+  1 * SEC_HOUR,
+  2 * SEC_HOUR,
+  3 * SEC_HOUR,
+  6 * SEC_HOUR,
+  12 * SEC_HOUR,
+  1 * SEC_DAY,
+  2 * SEC_DAY,
+  4 * SEC_DAY,
+  7 * SEC_DAY,
+];
+
+const readoutCache = new Map();
+
+function getReadoutElement(containerSel) {
+  if (!containerSel) return null;
+  if (readoutCache.has(containerSel)) return readoutCache.get(containerSel);
+  const id = containerSel.startsWith('#') ? containerSel.slice(1) : containerSel;
+  const el = document.getElementById(`${id}-readout`);
+  readoutCache.set(containerSel, el || null);
+  return el || null;
+}
+
+function pad2(n) {
+  return String(n).padStart(2, '0');
+}
+
+function formatCursorTime(sec) {
+  if (sec == null) return null;
+  const d = new Date(sec * 1000);
+  if (Number.isNaN(d.valueOf())) return null;
+  const yyyy = d.getUTCFullYear();
+  const mm = pad2(d.getUTCMonth() + 1);
+  const dd = pad2(d.getUTCDate());
+  const hh = pad2(d.getUTCHours());
+  const mi = pad2(d.getUTCMinutes());
+  return `${yyyy}-${mm}-${dd} ${hh}:${mi}Z`;
+}
+
+function formatCursorValue(val) {
+  if (val == null) return null;
+  const num = Number(val);
+  if (!Number.isFinite(num)) return null;
+  const abs = Math.abs(num);
+  const decimals = abs >= 10 ? 1 : 2;
+  return num.toFixed(decimals);
+}
+
+function computeUtcSplits(scaleMin, scaleMax) {
+  if (!Number.isFinite(scaleMin) || !Number.isFinite(scaleMax) || scaleMax <= scaleMin) {
+    return [scaleMin || 0];
+  }
+
+  const range = scaleMax - scaleMin;
+  let step = TICK_STEPS[TICK_STEPS.length - 1];
+  for (const candidate of TICK_STEPS) {
+    if (range / candidate <= TARGET_TICKS) {
+      step = candidate;
+      break;
+    }
+  }
+
+  const splits = [];
+  const first = Math.ceil(scaleMin / step) * step;
+  for (let t = first; t <= scaleMax; t += step) {
+    splits.push(t);
+  }
+
+  if (!splits.length) {
+    splits.push(scaleMin, scaleMax);
+  }
+
+  // Include exact bounds soズーム極小時でも最低2本
+  splits.push(scaleMin, scaleMax);
+
+  // Inject any UTC midnight tick that falls inside the range
+  let firstMidnight = Math.ceil(scaleMin / SEC_DAY) * SEC_DAY;
+  if (Math.abs(scaleMin % SEC_DAY) < 1e-3) firstMidnight = scaleMin;
+  for (let t = firstMidnight; t <= scaleMax; t += SEC_DAY) {
+    splits.push(t);
+  }
+
+  const uniq = Array.from(new Set(splits.map(v => Math.round(v)))).sort((a, b) => a - b);
+  return uniq.filter(v => v >= scaleMin - 1e-6 && v <= scaleMax + 1e-6);
+}
+
+function formatUtcLabels(u, splits, withEdge = false) {
+  const dates = splits.map(sec => new Date(sec * 1000));
+  return dates.map((d, i) => {
+    if (!withEdge && (i === 0 || i === dates.length - 1)) return '';
+    const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const dd = String(d.getUTCDate()).padStart(2, '0');
+    const hh = String(d.getUTCHours()).padStart(2, '0');
+    const mi = String(d.getUTCMinutes()).padStart(2, '0');
+    const timePart = `${hh}:${mi}`;
+
+    const prev = dates[i - 1];
+    const isNewDay = !prev ||
+      prev.getUTCFullYear() !== d.getUTCFullYear() ||
+      prev.getUTCMonth() !== d.getUTCMonth() ||
+      prev.getUTCDate() !== d.getUTCDate();
+
+    if (hh === '00' && mi === '00') {
+      return `${timePart}\n${mm}/${dd}`;
+    }
+
+    if (isNewDay) {
+      return `${timePart}\n${mm}/${dd}`;
+    }
+
+    return timePart;
+  });
+}
+
 // Date(UTC) -> 'YYYYMMDDTHHMMZ'
 function toStampUTC(date) {
   const y = String(date.getUTCFullYear()).padStart(4,'0');
@@ -117,7 +243,7 @@ function closeSheet() {
   setTimeout(() => sheet.classList.add('hidden'), 250);
 }
 function setSheetMeta(text) {
-  sheetMeta.textContent = text;
+  if (sheetMeta) sheetMeta.textContent = text;
 }
 sheetClose?.addEventListener('click', closeSheet);
 
@@ -127,14 +253,42 @@ function renderLine(containerSel, yLabel, xs, ys, existing) {
   if (!el) return null;
 
   const data = [xs, ys];
-  if (existing) { existing.setData(data); return existing; }
+  const readoutEl = getReadoutElement(containerSel);
+  const unitMatch = typeof yLabel === 'string' ? yLabel.match(/\(([^)]+)\)$/) : null;
+  const unitText = unitMatch ? unitMatch[1] : '';
+
+  const updateReadout = (sec, val) => {
+    if (!readoutEl) return;
+    if (sec == null) {
+      readoutEl.textContent = '—';
+      return;
+    }
+    const timeText = formatCursorTime(sec) || '—';
+    const valueTextRaw = formatCursorValue(val);
+    const valueText = valueTextRaw ? (unitText ? `${valueTextRaw} ${unitText}` : valueTextRaw) : '—';
+    readoutEl.textContent = `${timeText} · ${valueText}`;
+  };
+
+  if (existing) {
+    existing.setData(data);
+    updateReadout(null, null);
+    return existing;
+  }
 
   const opts = {
     width: el.clientWidth,
     height: el.clientHeight,
+    padding: [PLOT_PADDING_TOP, null, PLOT_PADDING_BOTTOM, null],
     scales: { x: { time: true } },
     axes: [
-      { stroke: "#444" },
+      {
+        stroke: "#444",
+        label: "UTC",
+        font: AXIS_FONT,
+        lineHeight: AXIS_LINE_HEIGHT,
+        splits: (u, axisIdx, scaleMin, scaleMax) => computeUtcSplits(scaleMin, scaleMax),
+        values: (u, splits) => formatUtcLabels(u, splits, Boolean(u?.ctx?.showEdges)),
+      },
       { stroke: "#444", label: yLabel }
     ],
     series: [
@@ -149,6 +303,30 @@ function renderLine(containerSel, yLabel, xs, ys, existing) {
         spanGaps: true       // null をまたいで結線（見えるか優先）
      }
     ],
+    hooks: {
+      init: [u => {
+        if (!u.ctx) u.ctx = {};
+        u.ctx.showEdges = false;
+        updateReadout(null, null);
+      }],
+      setData: [() => updateReadout(null, null)],
+      setCursor: [u => {
+        const { left, top, idx } = u.cursor;
+        if (left == null || top == null || left < 0 || top < 0 || idx == null || idx < 0) {
+          updateReadout(null, null);
+          return;
+        }
+        const xsData = u.data?.[0];
+        const ysData = u.data?.[1];
+        if (!Array.isArray(xsData) || idx >= xsData.length) {
+          updateReadout(null, null);
+          return;
+        }
+        const sec = xsData[idx];
+        const val = Array.isArray(ysData) ? ysData[idx] : null;
+        updateReadout(sec, val);
+      }],
+    },
   };
   return new uPlot(opts, data, el);
 }
@@ -185,10 +363,6 @@ export function initTimeseries({ map, getTyphoonGeoJSON: getter }) {
     const marker = ensureClickMarker(map);
     marker.setLngLat([lng, lat]).addTo(map);
     const el = marker.getElement();
-    el.classList.remove('ping'); // アニメ再生のため一旦外す
-    // reflowしてアニメをリスタート
-    // eslint-disable-next-line no-unused-expressions
-    el.offsetWidth;
     el.classList.add('ping');
 
     const ty = getTyphoonGeoJSON?.();
