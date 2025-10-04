@@ -9,6 +9,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uplot@1.6.30/dist/uPlot.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/uplot@1.6.30/dist/uPlot.iife.min.js"></script>
 </head>
 <body>
   <div id="app">
@@ -67,6 +70,30 @@
 
     <!-- 地図 -->
     <main id="map"></main>
+  </div>
+
+  <!-- NEW: ボトムシート（下部ポップアップ） -->
+  <div id="bottom-sheet" class="sheet hidden" role="dialog" aria-modal="false" aria-labelledby="sheet-title">
+    <div class="sheet-header">
+      <div id="sheet-title">Timeseries</div>
+      <button id="sheet-close" type="button" aria-label="Close">×</button>
+    </div>
+
+    <div class="sheet-meta" id="sheet-meta">—</div>
+
+    <div class="sheet-body">
+      <div class="chart-block">
+        <div class="chart-title">Precip (mm/h)</div>
+        <div id="chart-precip" class="chart" aria-label="Precipitation time series"></div>
+      </div>
+
+      <!-- 風を足すときは以下をアンコメント
+      <div class="chart-block">
+        <div class="chart-title">Wind (m/s)</div>
+        <div id="chart-wind" class="chart" aria-label="Wind speed time series"></div>
+      </div>
+      -->
+    </div>
   </div>
 
   <!-- MapLibre本体（グローバル: maplibregl） -->

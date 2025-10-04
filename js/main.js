@@ -8,7 +8,7 @@ import { initPrecip, setPrecipTime } from './overlay_precip.js';
 import { initGust, setGustTime } from './overlay_gust.js';
 import { els, setTimeLabel, bindLayerToggles, bindSidebarToggle, addHourStepButtons, mountCursorPosControl } from './ui.js';
 import { resolveGeojsonPath, setLayerVisibility } from './utils.js';
-
+import { initTimeseries } from './timeseries.js';
 
 let map;
 let STATE = {
@@ -17,8 +17,10 @@ let STATE = {
   TIME_TEXTS: [],
   byYear: null,
   byId: null,
-  data: null
+  data: null,
+  tyGeoJSON: null,
 };
+window.STATE = STATE; // ★ 時系列側のフォールバックで使う
 
 function setActiveTime(index){
   const p = STATE.hourlyPoints?.[index];
@@ -36,10 +38,21 @@ async function applyTyphoon(id){
   const meta = STATE.byId.get(id);
   const path = meta?.geojson || resolveGeojsonPath(id);
 
-  const { hourlyPoints, PRECIP_KEYS, TIME_TEXTS } = await loadTrack(map, path);
+  const { hourlyPoints, PRECIP_KEYS, TIME_TEXTS, geojson } = await loadTrack(map, path);
   STATE.hourlyPoints = hourlyPoints;
   STATE.PRECIP_KEYS  = PRECIP_KEYS;
   STATE.TIME_TEXTS   = TIME_TEXTS;
+  // loadTrack が geojson を返さなかった場合に備えてフェッチ
+  if (geojson) {
+    STATE.tyGeoJSON = geojson;
+  } else {
+    try {
+      STATE.tyGeoJSON = await (await fetch(path)).json();
+    } catch (e) {
+      console.warn('[applyTyphoon] geojson取得に失敗:', e);
+      STATE.tyGeoJSON = null;
+    }
+  }
 
   // スライダー
   els.slider.min = '0';
@@ -119,6 +132,13 @@ async function bootstrap(){
         initGust(map, precipKey);
         setLayerVisibility(map, 'gust-img', els.chkGust.checked);
       }
+
+      // ★ クリック→時系列（値PNG）機能を初期化
+      initTimeseries({
+        map,
+        // その時点の選択中台風GeoJSONを返す getter
+        getTyphoonGeoJSON: () => STATE.tyGeoJSON
+      });
     }
 
     // レイヤ順序最後へ（前景にトラック等を残す）
