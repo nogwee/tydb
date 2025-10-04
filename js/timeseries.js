@@ -30,6 +30,10 @@ function ll2px(lon, lat) {
   return { x: col, y: row };
 }
 
+function isInsideGrid(lon, lat) {
+  return lon >= GRID.minLon && lon <= GRID.maxLon && lat >= GRID.minLat && lat <= GRID.maxLat;
+}
+
 const SEC_MIN = 60;
 const SEC_HOUR = 60 * SEC_MIN;
 const SEC_DAY = 24 * SEC_HOUR;
@@ -53,6 +57,71 @@ const TICK_STEPS = [
   4 * SEC_DAY,
   7 * SEC_DAY,
 ];
+const BAR_PATH = (typeof uPlot !== 'undefined' && uPlot?.paths?.bars)
+  ? uPlot.paths.bars({ size: [SEC_HOUR, Infinity], align: -1 })
+  : null;
+
+let currentPlotInfo = {
+  xs: [],
+  secToIdx: null,
+  updateReadout: null,
+};
+
+function setPlotInfo(xs, updateReadout) {
+  currentPlotInfo.xs = xs;
+  currentPlotInfo.secToIdx = new Map();
+  xs.forEach((sec, idx) => {
+    if (sec != null) currentPlotInfo.secToIdx.set(sec, idx);
+  });
+  currentPlotInfo.updateReadout = updateReadout;
+}
+
+function findClosestIdx(xs, targetSec) {
+  if (!Array.isArray(xs) || xs.length === 0 || targetSec == null) return null;
+  let lo = 0;
+  let hi = xs.length - 1;
+  if (targetSec <= xs[lo]) return lo;
+  if (targetSec >= xs[hi]) return hi;
+  while (hi - lo > 1) {
+    const mid = (lo + hi) >> 1;
+    if (xs[mid] <= targetSec) lo = mid; else hi = mid;
+  }
+  return (targetSec - xs[lo] <= xs[hi] - targetSec) ? lo : hi;
+}
+
+function setPlotCursorBySec(sec) {
+  if (!currentPlotPrecip || sec == null) return false;
+  let idx = currentPlotInfo.secToIdx?.get(sec);
+  if (idx == null) idx = findClosestIdx(currentPlotInfo.xs, sec);
+  if (idx == null) {
+    currentPlotInfo.updateReadout?.(null, null);
+    return false;
+  }
+  const xVal = currentPlotInfo.xs[idx];
+  const ySeries = currentPlotPrecip.data?.[1];
+  const yVal = Array.isArray(ySeries) ? ySeries[idx] : null;
+  const left = currentPlotPrecip.valToPos(xVal, 'x');
+  currentPlotPrecip.setCursor({ idx, left });
+  const displaySec = currentPlotInfo.secToIdx?.has(sec) ? sec : xVal;
+  currentPlotInfo.updateReadout?.(displaySec, yVal);
+  return true;
+}
+
+function clearCurrentPlot() {
+  if (currentPlotPrecip) {
+    try { currentPlotPrecip.destroy(); } catch (e) { /* noop */ }
+  }
+  currentPlotPrecip = null;
+  currentPlotInfo = { xs: [], secToIdx: null, updateReadout: null };
+  const container = document.querySelector('#chart-precip');
+  if (container) {
+    container.innerHTML = '';
+    container.classList.add('empty');
+    container.setAttribute('data-placeholder', 'loading…');
+  }
+  const readoutEl = getReadoutElement('#chart-precip');
+  if (readoutEl) readoutEl.textContent = '—';
+}
 
 const readoutCache = new Map();
 
@@ -270,9 +339,16 @@ function renderLine(containerSel, yLabel, xs, ys, existing) {
   };
 
   if (existing) {
-    existing.setData(data);
-    updateReadout(null, null);
-    return existing;
+    if (!(existing.ctx && existing.ctx.asBars)) {
+      existing.destroy();
+    } else {
+      existing.setData(data);
+      const container = document.querySelector('#chart-precip');
+      if (container) container.classList.remove('empty');
+      setPlotInfo(xs, updateReadout);
+      updateReadout(null, null);
+      return existing;
+    }
   }
 
   const opts = {
@@ -280,6 +356,10 @@ function renderLine(containerSel, yLabel, xs, ys, existing) {
     height: el.clientHeight,
     padding: [PLOT_PADDING_TOP, null, PLOT_PADDING_BOTTOM, null],
     scales: { x: { time: true } },
+    cursor: {
+      x: true,
+      y: false,
+    },
     axes: [
       {
         stroke: "#444",
@@ -295,21 +375,28 @@ function renderLine(containerSel, yLabel, xs, ys, existing) {
       { label: "time" },
       {
         label: yLabel,
-        // 可視化を強制
-        stroke: "#1f77b4",   // 濃いめの青に固定
-        width: 2,            // 太め
-        fill: "rgba(31,119,180,0.10)", // うっすら塗り
-        points: { show: true, size: 3 }, // 点も出す
-        spanGaps: true       // null をまたいで結線（見えるか優先）
-     }
+        // 棒グラフで表示
+        stroke: '#1f77b4',
+        width: 0,
+        fill: 'rgba(31,119,180,0.55)',
+        points: { show: false },
+        spanGaps: true,
+        paths: BAR_PATH || undefined,
+      }
     ],
     hooks: {
       init: [u => {
         if (!u.ctx) u.ctx = {};
         u.ctx.showEdges = false;
+        u.ctx.asBars = Boolean(BAR_PATH);
+        setPlotInfo(xs, updateReadout);
         updateReadout(null, null);
       }],
-      setData: [() => updateReadout(null, null)],
+      setData: [u => {
+        const xsCurrent = Array.isArray(u.data?.[0]) ? u.data[0] : [];
+        setPlotInfo(xsCurrent, updateReadout);
+        updateReadout(null, null);
+      }],
       setCursor: [u => {
         const { left, top, idx } = u.cursor;
         if (left == null || top == null || left < 0 || top < 0 || idx == null || idx < 0) {
@@ -372,7 +459,18 @@ export function initTimeseries({ map, getTyphoonGeoJSON: getter }) {
     if (!tw) { console.warn('[timeseries] time window not found in geojson'); return; }
 
     openSheet(`Timeseries @ ${lng.toFixed(3)}, ${lat.toFixed(3)}`);
+    clearCurrentPlot();
+
+    const container = document.querySelector('#chart-precip');
+
+    if (!isInsideGrid(lng, lat)) {
+      if (container) container.setAttribute('data-placeholder', 'この地点は対象範囲外です');
+      setSheetMeta('この地点は対象範囲外です');
+      return;
+    }
+
     setSheetMeta('loading…');
+    if (container) container.setAttribute('data-placeholder', 'loading…');
     await new Promise(requestAnimationFrame);
 
     const { x, y } = ll2px(lng, lat);
@@ -438,10 +536,17 @@ export function initTimeseries({ map, getTyphoonGeoJSON: getter }) {
         const u = `${BASE_URL}/value_png/precip/precip_${s}.png`;
        fetch(u, {cache:'no-cache'}).then(r=>console.log('[check]', s, r.status, u));
       }
+      const container = document.querySelector('#chart-precip');
+      if (container) {
+        container.classList.add('empty');
+        container.setAttribute('data-placeholder', 'データが取得できません');
+      }
       return;
     }
 
     currentPlotPrecip = renderLine('#chart-precip', 'Precip (mm/h)', xs, ys, currentPlotPrecip);
+    const container = document.querySelector('#chart-precip');
+    if (container) container.classList.remove('empty');
     setSheetMeta(`${tw.start} – ${tw.end}`);
     resizePlots();
     } catch (err) {
@@ -454,6 +559,11 @@ export function initTimeseries({ map, getTyphoonGeoJSON: getter }) {
   return {
     // 台風選択が変わった時に呼ぶと、次回クリックから新しい期間が使われる
     setTyphoonGetter(fn) { getTyphoonGeoJSON = fn; },
-    destroy() { worker?.terminate(); worker = null; }
+    setActiveTime(sec) { return setPlotCursorBySec(sec); },
+    destroy() {
+      worker?.terminate();
+      worker = null;
+      currentPlotInfo = { xs: [], secToIdx: null, updateReadout: null };
+    }
   };
 }

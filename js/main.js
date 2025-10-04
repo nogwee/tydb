@@ -32,6 +32,7 @@ function setActiveTime(index){
   if (key) {
     setPrecipTime(map, key);
     setGustTime(map, key);
+    if (ts) ts.setActiveTime(stampToSec(key));
   }
 }
 
@@ -71,11 +72,6 @@ async function applyTyphoon(id){
   ensureActiveLayers(map, hourlyPoints[0]);
   setActivePosition(map, hourlyPoints[0].lat, hourlyPoints[0].lon);
   setActiveTime(0);
-
-  // ★ グラフ側ガイド線も0番目に同期
-  if (ts && STATE.PRECIP_KEYS[0]) {
-    ts.setActiveTime(stampToSec(STATE.PRECIP_KEYS[0]));
-  }
 
   // ±1hボタンの有効/無効状態を再評価
   if (window.updateHourStepButtons) window.updateHourStepButtons();
@@ -151,6 +147,9 @@ async function bootstrap(){
         // その時点の選択中台風GeoJSONを返す getter
         getTyphoonGeoJSON: () => STATE.tyGeoJSON
       });
+
+      const initialIdx = Number(els.slider.value) || 0;
+      setActiveTime(initialIdx);
     }
 
     // レイヤ順序最後へ（前景にトラック等を残す）
@@ -173,9 +172,7 @@ async function bootstrap(){
   // スライダー・±1h・矢印キー
   els.slider.addEventListener('input', e => {
    const idx = Number(e.target.value);
-   setActiveTime(idx);                           // 既存：地図とレイヤ更新
-   const key = STATE.PRECIP_KEYS[idx];
-   if (ts && key) ts.setActiveTime(stampToSec(key));  // ★ グラフの縦線
+   setActiveTime(idx);
 });
   window.updateHourStepButtons = addHourStepButtons((i) => setActiveTime(i));
 

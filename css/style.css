@@ -244,6 +244,18 @@ input[type="range"]    { accent-color: #394e86; }
   box-sizing: border-box;
 }
 
+#chart-precip.empty::before {
+  content: attr(data-placeholder);
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: #666;
+  background: #f6f7fc;
+}
+
 /* uPlotのrootはブロックにして余白を出さない */
 .uplot, .uplot canvas {
   display: block;
