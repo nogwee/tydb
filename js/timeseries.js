@@ -8,8 +8,12 @@ const BASE_URL = new URL('.', document.baseURI).href.replace(/\/$/, '');
 
 // ====== 内部状態 ======
 let worker;
+let mapRef = null;
 let getTyphoonGeoJSON = null;  // () => FeatureCollection（選択中台風を返す getter）
 let clickMarker = null;
+let suppressCursorCallback = false;
+let lastCursorSecEmitted = null;
+let onTimeSelected = null;
 
 const SERIES_CONFIG = {
   precip: {
@@ -37,6 +41,7 @@ const seriesState = {
 
 let activeLayer = null;
 let currentActiveSec = null;
+let lastClicked = null;
 
 // ====== ユーティリティ ======
 function ensureClickMarker(map) {
@@ -45,6 +50,12 @@ function ensureClickMarker(map) {
   el.className = 'click-marker';
   clickMarker = new maplibregl.Marker({ element: el, anchor: 'center' });
   return clickMarker;
+}
+
+function clearClickMarker() {
+  if (!clickMarker) return;
+  try { clickMarker.remove(); } catch (e) { /* noop */ }
+  clickMarker = null;
 }
 
 function ll2px(lon, lat) {
@@ -126,7 +137,9 @@ function setPlotCursor(kind, sec) {
   const ySeries = plot.data?.[1];
   const yVal = Array.isArray(ySeries) ? ySeries[idx] : null;
   const left = plot.valToPos(xVal, 'x');
+  suppressCursorCallback = true;
   plot.setCursor({ idx, left });
+  suppressCursorCallback = false;
   const displaySec = state.secToIdx?.has(sec) ? sec : xVal;
   state.updateReadout?.(displaySec, yVal);
   return true;
@@ -136,6 +149,8 @@ function markPlaceholder(kind, message) {
   const cfg = SERIES_CONFIG[kind];
   const container = document.querySelector(cfg.container);
   if (container) {
+    container.classList.remove('loading');
+    container.removeAttribute('data-overlay');
     container.innerHTML = '';
     container.classList.add('empty');
     container.setAttribute('data-placeholder', message);
@@ -144,7 +159,18 @@ function markPlaceholder(kind, message) {
   if (readoutEl) readoutEl.textContent = '—';
 }
 
-function clearSeries(kind) {
+function setLoadingOverlay(kind, message = 'loading...') {
+  const cfg = SERIES_CONFIG[kind];
+  const container = document.querySelector(cfg.container);
+  if (!container) return;
+  container.classList.remove('empty');
+  container.classList.add('loading');
+  container.setAttribute('data-overlay', message);
+  const readoutEl = getReadoutElement(cfg.container);
+  if (readoutEl) readoutEl.textContent = '—';
+}
+
+function clearSeries(kind, placeholder = 'loading...') {
   const state = seriesState[kind];
   if (state.plot) {
     try { state.plot.destroy(); } catch (e) { /* noop */ }
@@ -153,11 +179,11 @@ function clearSeries(kind) {
   state.xs = [];
   state.secToIdx = new Map();
   state.updateReadout = null;
-  markPlaceholder(kind, 'loading...');
+  markPlaceholder(kind, placeholder);
 }
 
-function clearAllCharts() {
-  Object.keys(SERIES_CONFIG).forEach(clearSeries);
+function clearAllCharts(placeholder = 'loading...') {
+  Object.keys(SERIES_CONFIG).forEach(kind => clearSeries(kind, placeholder));
   updateChartVisibility();
 }
 
@@ -351,6 +377,8 @@ function openSheet(title) {
 }
 function closeSheet() {
   sheet.classList.remove('show');
+  clearClickMarker();
+  resetCharts();
   // 終了後に display:none（hidden）に戻す
   setTimeout(() => sheet.classList.add('hidden'), 250);
 }
@@ -371,16 +399,189 @@ function applyActiveLayer(kind) {
   activeLayer = kind;
   updateChartVisibility();
   if (kind && currentActiveSec != null) setPlotCursor(kind, currentActiveSec);
+  if (kind && lastClicked && !seriesState[kind].plot) {
+    loadChartsForLocation(lastClicked.lng, lastClicked.lat, { showMarker: false, keepExisting: true, layers: [kind] });
+  }
   if (kind) resizePlots();
 }
 
 updateChartVisibility();
+
+async function loadChartsForLocation(lng, lat, { showMarker = true, keepExisting = false, layers = null } = {}) {
+  if (!mapRef) return false;
+  const ty = getTyphoonGeoJSON?.();
+  if (!ty) {
+    console.warn('[timeseries] typhoon geojson is null');
+    return false;
+  }
+
+  const tw = getTyphoonTimeWindow(ty);
+  if (!tw) {
+    console.warn('[timeseries] time window not found in geojson');
+    return false;
+  }
+
+  if (showMarker) {
+    const marker = ensureClickMarker(mapRef);
+    marker.setLngLat([lng, lat]).addTo(mapRef);
+    marker.getElement().classList.add('ping');
+  }
+
+  openSheet(`Timeseries @ ${lng.toFixed(3)}, ${lat.toFixed(3)}`);
+
+  const allKinds = Object.keys(SERIES_CONFIG);
+  const fetchSet = new Set((layers ? layers : (activeLayer ? [activeLayer] : [])).filter(Boolean));
+
+  if (!isInsideGrid(lng, lat)) {
+    allKinds.forEach(kind => clearSeries(kind, 'この地点は対象範囲外です'));
+    updateChartVisibility();
+    setSheetMeta('この地点は対象範囲外です');
+    lastClicked = { lng, lat };
+    lastCursorSecEmitted = null;
+    return false;
+  }
+
+  if (fetchSet.size === 0) {
+    if (!keepExisting) {
+      clearAllCharts('レイヤーを選択してください');
+    }
+    setSheetMeta('レイヤーを選択してください');
+    lastClicked = { lng, lat };
+    lastCursorSecEmitted = null;
+    return false;
+  }
+
+  if (!keepExisting) {
+    allKinds.forEach(kind => {
+      if (fetchSet.has(kind)) {
+        clearSeries(kind, 'loading...');
+      } else {
+        clearSeries(kind, 'レイヤーを選択してください');
+      }
+    });
+  } else {
+    fetchSet.forEach(kind => {
+      const state = seriesState[kind];
+      state.updateReadout?.(null, null);
+      state.plot?.setCursor({ idx: null, left: null });
+      setLoadingOverlay(kind);
+    });
+  }
+
+  setSheetMeta('loading...');
+  lastClicked = { lng, lat };
+  lastCursorSecEmitted = null;
+
+  await new Promise(requestAnimationFrame);
+
+  const { x, y } = ll2px(lng, lat);
+  const dates = hourlyRangeUTC(tw.start, tw.end);
+  const stamps = dates.map(toStampUTC);
+  const xsBase = dates.map(d => Math.floor(d.getTime() / 1000));
+
+  const valuesToSeries = (vals) => vals.map(v => Number.isFinite(v) ? v : null);
+  const hasData = (arr) => Array.isArray(arr) && arr.some(v => v != null);
+
+  let precipXs = xsBase;
+  let precipYs = [];
+  let precipHasData = false;
+  let precipLabel = `${tw.start} – ${tw.end}`;
+
+  let gustYs = [];
+  let gustHasData = false;
+
+  try {
+    if (fetchSet.has('precip')) {
+      const { values: precipVals } = await askWorker('precip', stamps, x, y, SCALE.precip);
+      precipYs = valuesToSeries(precipVals);
+      precipHasData = hasData(precipYs);
+
+      if (!precipHasData) {
+        const keys = (window.STATE && Array.isArray(window.STATE.PRECIP_KEYS)) ? window.STATE.PRECIP_KEYS : [];
+        if (keys.length) {
+          const fallbackRes = await askWorker('precip', keys, x, y, SCALE.precip);
+          const fallbackVals = fallbackRes.values || [];
+          const fallbackXs = [];
+          const fallbackYs = [];
+          keys.forEach((s, idx) => {
+            const m = s.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})Z$/);
+            if (!m) return;
+            const sec = Math.floor(Date.UTC(m[1], m[2]-1, m[3], m[4], m[5]) / 1000);
+            const raw = fallbackVals[idx];
+            fallbackXs.push(sec);
+            fallbackYs.push(Number.isFinite(raw) ? raw : null);
+          });
+          if (hasData(fallbackYs)) {
+            precipYs = fallbackYs;
+            precipXs = fallbackXs;
+            precipHasData = true;
+            precipLabel = `${keys[0]} – ${keys.at(-1)} (fallback)`;
+          }
+        }
+      }
+
+      if (precipHasData) {
+        renderSeries('precip', precipXs, precipYs);
+      } else {
+        markPlaceholder('precip', 'データが取得できません');
+      }
+    } else if (!keepExisting) {
+      markPlaceholder('precip', 'レイヤーを選択してください');
+    }
+
+    if (fetchSet.has('gust')) {
+      try {
+        const { values: gustVals } = await askWorker('gust', stamps, x, y, SCALE.gust);
+        gustYs = valuesToSeries(gustVals);
+        gustHasData = hasData(gustYs);
+        if (gustHasData) {
+          renderSeries('gust', xsBase, gustYs);
+        } else {
+          markPlaceholder('gust', 'データが取得できません');
+        }
+      } catch (gustErr) {
+        console.error('[timeseries] gust fetch failed', gustErr);
+        markPlaceholder('gust', 'データが取得できません');
+      }
+    } else if (!keepExisting) {
+      markPlaceholder('gust', 'レイヤーを選択してください');
+    }
+
+    if ((fetchSet.has('precip') && precipHasData) || (fetchSet.has('gust') && gustHasData)) {
+      setSheetMeta(precipLabel);
+    } else if (fetchSet.size) {
+      setSheetMeta('この期間の値が取得できません');
+    }
+
+    resizePlots();
+    if (currentActiveSec != null) {
+      allKinds.forEach(kind => setPlotCursor(kind, currentActiveSec));
+    } else if (precipHasData && precipXs.length) {
+      currentActiveSec = precipXs[0];
+      allKinds.forEach(kind => setPlotCursor(kind, currentActiveSec));
+    }
+
+    updateChartVisibility();
+    return (fetchSet.has('precip') && precipHasData) || (fetchSet.has('gust') && gustHasData);
+  } catch (err) {
+    setSheetMeta('データ取得に失敗しました');
+    console.error(err);
+    if (fetchSet.has('precip')) markPlaceholder('precip', 'データが取得できません');
+    if (fetchSet.has('gust')) markPlaceholder('gust', 'データが取得できません');
+    updateChartVisibility();
+    return false;
+  }
+}
 
 // ====== uPlot描画 ======
 function renderSeries(kind, xs, ys) {
   const cfg = SERIES_CONFIG[kind];
   const container = document.querySelector(cfg.container);
   if (!container) return null;
+
+  container.classList.remove('empty');
+  container.classList.remove('loading');
+  container.removeAttribute('data-overlay');
 
   const data = [xs, ys];
   const readoutEl = getReadoutElement(cfg.container);
@@ -484,6 +685,12 @@ function renderSeries(kind, xs, ys) {
         const sec = xsData[idx];
         const val = Array.isArray(ysData) ? ysData[idx] : null;
         updateReadout(sec, val);
+        if (!suppressCursorCallback && onTimeSelected && typeof sec === 'number') {
+          if (lastCursorSecEmitted !== sec) {
+            lastCursorSecEmitted = sec;
+            onTimeSelected(sec);
+          }
+        }
       }],
     },
   };
@@ -517,131 +724,19 @@ function askWorker(kind, stamps, x, y, scale) {
 }
 
 // ====== 外部公開API ======
-export function initTimeseries({ map, getTyphoonGeoJSON: getter }) {
+export function initTimeseries({ map, getTyphoonGeoJSON: getter, onTimeSelect } = {}) {
+  mapRef = map;
   getTyphoonGeoJSON = getter;
+  onTimeSelected = typeof onTimeSelect === 'function' ? onTimeSelect : null;
+  lastCursorSecEmitted = null;
   worker = new Worker('./js/value_reader.worker.js', { type: 'module' });
 
-  // 地図クリック -> その地点の降水時系列
-  map.on('click', async (e) => {
-    const { lng, lat } = e.lngLat;
-
-    // クリック目印の表示＆アニメ（波紋）
-    const marker = ensureClickMarker(map);
-    marker.setLngLat([lng, lat]).addTo(map);
-    const el = marker.getElement();
-    el.classList.add('ping');
-
-    const ty = getTyphoonGeoJSON?.();
-    if (!ty) { console.warn('[timeseries] typhoon geojson is null'); return; }
-
-    const tw = getTyphoonTimeWindow(ty);
-    if (!tw) { console.warn('[timeseries] time window not found in geojson'); return; }
-
-    openSheet(`Timeseries @ ${lng.toFixed(3)}, ${lat.toFixed(3)}`);
-    clearAllCharts();
-
-    if (!isInsideGrid(lng, lat)) {
-      markPlaceholder('precip', 'この地点は対象範囲外です');
-      markPlaceholder('gust', 'この地点は対象範囲外です');
-      setSheetMeta('この地点は対象範囲外です');
-      return;
-    }
-
-    setSheetMeta('loading...');
-    Object.keys(SERIES_CONFIG).forEach(kind => markPlaceholder(kind, 'loading...'));
-    await new Promise(requestAnimationFrame);
-
-    const { x, y } = ll2px(lng, lat);
-    const { nx, ny } = expectedSize();
-    console.log('[timeseries] click px', { x, y, expected: { nx, ny } });
-
-    const dates = hourlyRangeUTC(tw.start, tw.end);
-    const stamps = dates.map(toStampUTC);
-    const xsBase = dates.map(d => Math.floor(d.getTime() / 1000));
-
-    const valuesToSeries = (vals) => vals.map(v => Number.isFinite(v) ? v : null);
-    const hasData = (arr) => Array.isArray(arr) && arr.some(v => v != null);
-
-    let precipXs = xsBase;
-    let precipYs = [];
-    let precipHasData = false;
-    let precipLabel = `${tw.start} – ${tw.end}`;
-
-    let gustYs = [];
-    let gustHasData = false;
-
-    try {
-      const { values: precipVals } = await askWorker('precip', stamps, x, y, SCALE.precip);
-      precipYs = valuesToSeries(precipVals);
-      precipHasData = hasData(precipYs);
-
-      if (!precipHasData) {
-        const keys = (window.STATE && Array.isArray(window.STATE.PRECIP_KEYS)) ? window.STATE.PRECIP_KEYS : [];
-        if (keys.length) {
-          console.log('[timeseries] fallback to STATE.PRECIP_KEYS', keys.length);
-          const fallbackRes = await askWorker('precip', keys, x, y, SCALE.precip);
-          const fallbackVals = fallbackRes.values || [];
-          const fallbackXs = [];
-          const fallbackYs = [];
-          keys.forEach((s, idx) => {
-            const m = s.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})Z$/);
-            if (!m) return;
-            const sec = Math.floor(Date.UTC(m[1], m[2]-1, m[3], m[4], m[5]) / 1000);
-            const raw = fallbackVals[idx];
-            fallbackXs.push(sec);
-            fallbackYs.push(Number.isFinite(raw) ? raw : null);
-          });
-          if (hasData(fallbackYs)) {
-            precipYs = fallbackYs;
-            precipXs = fallbackXs;
-            precipHasData = true;
-            precipLabel = `${keys[0]} – ${keys.at(-1)} (fallback)`;
-          }
-        }
-      }
-
-      if (precipHasData) {
-        renderSeries('precip', precipXs, precipYs);
-      } else {
-        markPlaceholder('precip', 'データが取得できません');
-      }
-
-      try {
-        const { values: gustVals } = await askWorker('gust', stamps, x, y, SCALE.gust);
-        gustYs = valuesToSeries(gustVals);
-        gustHasData = hasData(gustYs);
-        if (gustHasData) {
-          renderSeries('gust', xsBase, gustYs);
-        } else {
-          markPlaceholder('gust', 'データが取得できません');
-        }
-      } catch (gustErr) {
-        console.error('[timeseries] gust fetch failed', gustErr);
-        markPlaceholder('gust', 'データが取得できません');
-      }
-
-      if (precipHasData || gustHasData) {
-        setSheetMeta(precipLabel);
-      } else {
-        setSheetMeta('この期間の値が取得できません');
-      }
-
-      resizePlots();
-      if (currentActiveSec != null) {
-        Object.keys(SERIES_CONFIG).forEach(kind => setPlotCursor(kind, currentActiveSec));
-      } else if (precipXs.length) {
-        currentActiveSec = precipXs[0];
-        Object.keys(SERIES_CONFIG).forEach(kind => setPlotCursor(kind, currentActiveSec));
-      }
-
-      updateChartVisibility();
-    } catch (err) {
-      setSheetMeta('データ取得に失敗しました');
-      console.error(err);
-      markPlaceholder('precip', 'データが取得できません');
-      markPlaceholder('gust', 'データが取得できません');
-    }
+  // 地図クリック -> その地点の時系列
+  map.on('click', (e) => {
+    loadChartsForLocation(e.lngLat.lng, e.lngLat.lat, { showMarker: true, keepExisting: false });
   });
+
+  resetCharts();
 
   return {
     // 台風選択が変わった時に呼ぶと、次回クリックから新しい期間が使われる
@@ -651,11 +746,32 @@ export function initTimeseries({ map, getTyphoonGeoJSON: getter }) {
       Object.keys(SERIES_CONFIG).forEach(kind => setPlotCursor(kind, sec));
       return true;
     },
+    refresh() {
+      if (lastClicked) {
+        return loadChartsForLocation(lastClicked.lng, lastClicked.lat, { showMarker: false, keepExisting: true });
+      }
+      resetCharts();
+      return false;
+    },
+    reset() { resetCharts(); },
     setActiveLayer(kind) { applyActiveLayer(kind); },
     destroy() {
       worker?.terminate();
       worker = null;
-      clearAllCharts();
+      mapRef = null;
+      lastClicked = null;
+      currentActiveSec = null;
+      onTimeSelected = null;
+      suppressCursorCallback = false;
+      lastCursorSecEmitted = null;
+      clearAllCharts('レイヤーを選択してください');
     }
   };
+}
+function resetCharts() {
+  clearAllCharts('地点をクリックしてください');
+  currentActiveSec = null;
+  setSheetMeta('地点をクリックしてください');
+  lastClicked = null;
+  lastCursorSecEmitted = null;
 }

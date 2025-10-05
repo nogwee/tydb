@@ -6,6 +6,82 @@ import {
   diffHours, dateToKeyUTC, setLayersVisibility
 } from './utils.js';
 
+let hoverPopup = null;
+let hoverBound = false;
+
+function formatCoord(value, axis) {
+  if (value == null || !Number.isFinite(Number(value))) return '—';
+  const num = Number(value);
+  const sign = axis === 'lat' ? (num >= 0 ? 'N' : 'S') : (num >= 0 ? 'E' : 'W');
+  return `${Math.abs(num).toFixed(1)}°${sign}`;
+}
+
+function safeText(v) {
+  if (v == null) return '—';
+  return String(v);
+}
+
+function renderTrackTooltip(properties, coordinates) {
+  const dt = safeText(properties['datetime(UTC)']);
+  const grade = safeText(properties.grade);
+  const lat = properties.lat ?? coordinates?.[1];
+  const lon = properties.lon ?? coordinates?.[0];
+  const pressure = properties.pressure;
+  const wind = properties['wind(knot)'] ?? properties.wind;
+
+  const latText = formatCoord(lat, 'lat');
+  const lonText = formatCoord(lon, 'lon');
+  const pressureText = pressure != null ? `${pressure} hPa` : '—';
+  const windText = wind != null ? `${wind} kt` : '—';
+
+  return `
+    <div class="track-tooltip">
+      <div class="tt-line"><span class="tt-label">Time</span><span class="tt-value">${dt}</span></div>
+      <div class="tt-line"><span class="tt-label">Grade</span><span class="tt-value">${grade}</span></div>
+      <div class="tt-line"><span class="tt-label">Lat</span><span class="tt-value">${latText}</span></div>
+      <div class="tt-line"><span class="tt-label">Lon</span><span class="tt-value">${lonText}</span></div>
+      <div class="tt-line"><span class="tt-label">Pressure</span><span class="tt-value">${pressureText}</span></div>
+      <div class="tt-line"><span class="tt-label">Wind</span><span class="tt-value">${windText}</span></div>
+    </div>
+  `;
+}
+
+export function bindTrackHover(map) {
+  if (hoverBound) return;
+
+  const bind = () => {
+    if (hoverBound) return;
+    if (!map.getLayer('track-points')) return; // layer missing
+
+    hoverPopup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, className: 'track-popup' });
+
+    map.on('mouseenter', 'track-points-hit', () => {
+      map.getCanvas().style.cursor = 'pointer';
+    });
+
+    map.on('mouseleave', 'track-points-hit', () => {
+      map.getCanvas().style.cursor = '';
+      if (hoverPopup) hoverPopup.remove();
+    });
+
+    map.on('mousemove', 'track-points-hit', (event) => {
+      const feature = event.features?.[0];
+      if (!feature) return;
+      const coords = feature.geometry?.coordinates?.slice() || [event.lngLat.lng, event.lngLat.lat];
+      const html = renderTrackTooltip(feature.properties || {}, coords);
+      hoverPopup.setLngLat(coords).setHTML(html).addTo(map);
+    });
+
+    hoverBound = true;
+  };
+
+  if (map.isStyleLoaded()) {
+    bind();
+  } else {
+    map.once('load', bind);
+  }
+}
+
 export async function loadTrack(map, geojsonUrl) {
   // --- fetch/geojsonパース ---
   const res = await fetch(geojsonUrl, { cache: 'no-cache' });
@@ -54,7 +130,7 @@ export async function loadTrack(map, geojsonUrl) {
   const PRECIP_KEYS = hourlyPoints.map(p => dateToKeyUTC(p.time));
   const TIME_TEXTS  = hourlyPoints.map(p => p.time.toISOString().replace('.000',''));
 
-  return { hourlyPoints, PRECIP_KEYS, TIME_TEXTS };
+  return { hourlyPoints, PRECIP_KEYS, TIME_TEXTS, geojson: geo };
 }
 
 // === active 用レイヤ

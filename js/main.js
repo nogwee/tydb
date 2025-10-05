@@ -3,7 +3,7 @@
 
 import { createMap } from './map.js';
 import { loadManifest, populateYearSelect, populateTyphoonSelect, updateWikiLink } from './manifest.js';
-import { loadTrack, ensureActiveLayers, setActivePosition, startPulse, stopPulse, toggleActive } from './track.js';
+import { loadTrack, ensureActiveLayers, setActivePosition, startPulse, stopPulse, toggleActive, bindTrackHover } from './track.js';
 import { initPrecip, setPrecipTime } from './overlay_precip.js';
 import { initGust, setGustTime } from './overlay_gust.js';
 import { els, setTimeLabel, bindLayerToggles, bindSidebarToggle, addHourStepButtons, mountCursorPosControl } from './ui.js';
@@ -41,6 +41,34 @@ function stampToSec(s) {
   return m ? Math.floor(Date.UTC(m[1], m[2]-1, m[3], m[4], m[5]) / 1000) : null;
 }
 
+function findClosestIndexBySec(sec) {
+  if (!Array.isArray(STATE.hourlyPoints) || !STATE.hourlyPoints.length) return null;
+  let bestIdx = -1;
+  let bestDiff = Infinity;
+  for (let i = 0; i < STATE.hourlyPoints.length; i += 1) {
+    const pt = STATE.hourlyPoints[i];
+    const tSec = Math.floor(pt.time.getTime() / 1000);
+    const diff = Math.abs(tSec - sec);
+    if (diff < bestDiff) {
+      bestDiff = diff;
+      bestIdx = i;
+    }
+  }
+  return bestIdx >= 0 ? bestIdx : null;
+}
+
+function setActiveTimeFromSeconds(sec) {
+  if (!Number.isFinite(sec)) return;
+  const idx = findClosestIndexBySec(sec);
+  if (idx == null) return;
+  const currentIdx = Number(els.slider.value);
+  if (!Number.isFinite(currentIdx) || currentIdx !== idx) {
+    els.slider.value = String(idx);
+    if (window.updateHourStepButtons) window.updateHourStepButtons();
+  }
+  setActiveTime(idx);
+}
+
 
 async function applyTyphoon(id){
   const meta = STATE.byId.get(id);
@@ -61,6 +89,8 @@ async function applyTyphoon(id){
       STATE.tyGeoJSON = null;
     }
   }
+
+  if (ts) await ts.refresh();
 
   // スライダー
   els.slider.min = '0';
@@ -88,6 +118,7 @@ async function applyTyphoon(id){
 
 async function bootstrap(){
   map = createMap();
+  bindTrackHover(map);
 
   // カーソル座標を右上に常時表示（小数5桁。度分秒にしたければ { dms:true }）
   mountCursorPosControl(map, { precision: 4 });
@@ -145,7 +176,8 @@ async function bootstrap(){
       ts = initTimeseries({
         map,
         // その時点の選択中台風GeoJSONを返す getter
-        getTyphoonGeoJSON: () => STATE.tyGeoJSON
+        getTyphoonGeoJSON: () => STATE.tyGeoJSON,
+        onTimeSelect: setActiveTimeFromSeconds
       });
 
       const syncTimeseriesLayer = () => {

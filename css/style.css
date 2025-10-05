@@ -255,6 +255,18 @@ input[type="range"]    { accent-color: #394e86; }
   color: #666;
   background: #f6f7fc;
 }
+.chart.loading::after {
+  content: attr(data-overlay);
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: #fff;
+  background: rgba(60,72,110,0.45);
+  pointer-events: none;
+}
 
 #block-gust { display: none; }
 #chart-none-message { display: none; font-size: 12px; color: #666; text-align: center; padding: 32px 0; }
@@ -262,6 +274,100 @@ input[type="range"]    { accent-color: #394e86; }
 /* uPlotのrootはブロックにして余白を出さない */
 .uplot, .uplot canvas {
   display: block;
+}
+
+/* トラックポイントのポップアップ */
+.track-popup .maplibregl-popup-content {
+  padding: 8px 10px;
+  font-size: 11px;
+  color: #222;
+  line-height: 1.5;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+}
+.track-popup .maplibregl-popup-tip { display: none; }
+.track-tooltip { min-width: 180px; }
+.track-tooltip .tt-line { display: flex; justify-content: space-between; gap: 8px; }
+.track-tooltip .tt-label { font-weight: 600; color: #445; }
+.track-tooltip .tt-value { text-align: right; color: #222; }
+
+/* ====== レスポンシブ調整 ====== */
+@media (max-width: 960px) {
+  #app {
+    flex-direction: column;
+  }
+
+  #sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #ddd;
+    max-height: 320px;
+    padding: 12px 16px;
+    transition: max-height .25s ease, padding .25s ease;
+  }
+
+  #sidebar.collapsed {
+    width: 100%;
+    padding: 0 16px;
+    border-bottom: none;
+    max-height: 0;
+  }
+
+  #sidebar-toggle {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    left: auto;
+    z-index: 600;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+
+  #sidebar.collapsed + #sidebar-toggle {
+    right: 12px;
+  }
+
+  #map {
+    flex: 1;
+    min-height: 45vh;
+  }
+
+  .sheet {
+    max-height: 55vh;
+  }
+
+  #sidebar .typhoon-row {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 600px) {
+  #sidebar {
+    padding: 12px;
+  }
+
+  #sidebar.collapsed {
+    padding: 0 12px;
+  }
+
+  #sidebar-title {
+    font-size: 16px;
+  }
+
+  #sidebar h3 {
+    font-size: 15px;
+  }
+
+  #map {
+    min-height: 50vh;
+  }
+
+  .chart {
+    height: 160px;
+  }
+
+  .sheet {
+    max-height: 65vh;
+  }
 }
 
 /* クリック位置マーカー */

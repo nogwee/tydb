@@ -21,6 +21,14 @@ export function createMap() {
           filter:['==', ['geometry-type'], 'LineString'],
           paint:{'line-color':'#333','line-width':2},
           layout:{ visibility:'visible' } },
+        { id:'track-points-hit', type:'circle', source:'track',
+          filter:['==', ['geometry-type'], 'Point'],
+          paint:{
+            'circle-radius': 10,
+            'circle-color': '#000',
+            'circle-opacity': 0
+          },
+          layout:{ visibility:'visible' } },
         { id:'track-points', type:'circle', source:'track',
           filter:['==', ['geometry-type'], 'Point'],
           paint:{'circle-radius':4, 'circle-color':'#666'},
