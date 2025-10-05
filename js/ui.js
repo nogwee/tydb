@@ -187,7 +187,8 @@ export function bindLayerToggles(map){
 export function bindSidebarToggle(map){
   els.toggleBtn.addEventListener('click', () => {
     const collapsed = els.sidebar.classList.toggle('collapsed');
-    els.toggleBtn.textContent = collapsed ? '≫' : '≪';
+    els.toggleBtn.textContent = collapsed ? '☰' : '×';
+    els.toggleBtn.setAttribute('aria-label', collapsed ? 'サイドバーを開く' : 'サイドバーを閉じる');
     els.toggleBtn.setAttribute('aria-expanded', String(!collapsed));
     map.resize();
   });

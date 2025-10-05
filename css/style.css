@@ -78,20 +78,31 @@ input[type="range"]    { accent-color: #394e86; }
 /* トグルボタン（サイドバー端に沿わせる） */
 #sidebar-toggle {
   position: absolute;
-  top: 10px;
+  top: 12px;
   left: 292px;     /* = サイドバー幅(260) + 余白 */
   z-index: 3;
-  border: 1px solid #ccc;
-  background: #fff;
-  padding: 6px 8px;
-  border-radius: 6px;
+  border: 1px solid #c2c6d4;
+  background: rgba(255,255,255,0.95);
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 18px;
+  line-height: 1;
   cursor: pointer;
   user-select: none;
-  transition: left .25s ease; /* サイドバーと一緒にスライド */
+  transition: left .25s ease, background .2s ease, border-color .2s ease;
+}
+
+#sidebar-toggle:hover {
+  background: #f0f2f8;
+  border-color: #a3a9ba;
 }
 
 /* サイドバーが畳まれたときのボタン位置・表示 */
-#sidebar.collapsed + #sidebar-toggle { left: 10px; }
+#sidebar.collapsed + #sidebar-toggle { left: 12px; }
 
 #sidebar h3 { margin: 8px 0; font-size: 16px; }
 #sidebar label { display: inline-flex; gap: 6px; align-items: center; margin: 4px 0; }
@@ -316,14 +327,14 @@ input[type="range"]    { accent-color: #394e86; }
   #sidebar-toggle {
     position: fixed;
     top: 12px;
-    right: 12px;
-    left: auto;
+    left: 12px;
+    right: auto;
     z-index: 600;
     box-shadow: 0 2px 6px rgba(0,0,0,0.15);
   }
 
   #sidebar.collapsed + #sidebar-toggle {
-    right: 12px;
+    left: 12px;
   }
 
   #map {
