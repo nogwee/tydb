@@ -80,18 +80,19 @@
     </div>
 
     <div class="sheet-body">
-      <div class="chart-block">
+      <div class="chart-block" id="block-precip">
         <div class="chart-title">Precip (mm/h)</div>
         <div class="chart-readout" id="chart-precip-readout" aria-live="polite">—</div>
-        <div id="chart-precip" class="chart" aria-label="Precipitation time series"></div>
+        <div id="chart-precip" class="chart empty" data-placeholder="loading..." aria-label="Precipitation time series"></div>
       </div>
 
-      <!-- 風を足すときは以下をアンコメント
-      <div class="chart-block">
-        <div class="chart-title">Wind (m/s)</div>
-        <div id="chart-wind" class="chart" aria-label="Wind speed time series"></div>
+      <div class="chart-block" id="block-gust">
+        <div class="chart-title">Gust (m/s)</div>
+        <div class="chart-readout" id="chart-gust-readout" aria-live="polite">—</div>
+        <div id="chart-gust" class="chart empty" data-placeholder="loading..." aria-label="Gust time series"></div>
       </div>
-      -->
+
+      <div class="chart-placeholder" id="chart-none-message">レイヤーを選択してください</div>
     </div>
   </div>
 

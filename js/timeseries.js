@@ -3,14 +3,40 @@
 
 // ====== 設定（GRIDはあなたの格子に合わせて）======
 const GRID = { minLon:90.0, maxLon:180.0, minLat:0.0, maxLat:60.0, dLon:0.25, dLat:0.25 };
-const SCALE = { precip: 0.1 }; // mm/h
+const SCALE = { precip: 0.1, gust: 0.1 }; // precip: mm/h, gust: m/s (0.1 scale)
 const BASE_URL = new URL('.', document.baseURI).href.replace(/\/$/, '');
 
 // ====== 内部状態 ======
 let worker;
-let currentPlotPrecip = null;
 let getTyphoonGeoJSON = null;  // () => FeatureCollection（選択中台風を返す getter）
 let clickMarker = null;
+
+const SERIES_CONFIG = {
+  precip: {
+    container: '#chart-precip',
+    readout: '#chart-precip-readout',
+    unit: 'mm/h',
+    title: 'Precip (mm/h)',
+    color: '#1f77b4',
+    type: 'bar',
+  },
+  gust: {
+    container: '#chart-gust',
+    readout: '#chart-gust-readout',
+    unit: 'm/s',
+    title: 'Gust (m/s)',
+    color: '#d2642a',
+    type: 'line',
+  }
+};
+
+const seriesState = {
+  precip: { plot: null, xs: [], secToIdx: new Map(), updateReadout: null },
+  gust:   { plot: null, xs: [], secToIdx: new Map(), updateReadout: null },
+};
+
+let activeLayer = null;
+let currentActiveSec = null;
 
 // ====== ユーティリティ ======
 function ensureClickMarker(map) {
@@ -61,19 +87,15 @@ const BAR_PATH = (typeof uPlot !== 'undefined' && uPlot?.paths?.bars)
   ? uPlot.paths.bars({ size: [SEC_HOUR, Infinity], align: -1 })
   : null;
 
-let currentPlotInfo = {
-  xs: [],
-  secToIdx: null,
-  updateReadout: null,
-};
-
-function setPlotInfo(xs, updateReadout) {
-  currentPlotInfo.xs = xs;
-  currentPlotInfo.secToIdx = new Map();
+function setPlotInfo(kind, xs, updateReadout) {
+  const state = seriesState[kind];
+  state.xs = xs;
+  const map = new Map();
   xs.forEach((sec, idx) => {
-    if (sec != null) currentPlotInfo.secToIdx.set(sec, idx);
+    if (sec != null) map.set(sec, idx);
   });
-  currentPlotInfo.updateReadout = updateReadout;
+  state.secToIdx = map;
+  state.updateReadout = updateReadout;
 }
 
 function findClosestIdx(xs, targetSec) {
@@ -89,38 +111,54 @@ function findClosestIdx(xs, targetSec) {
   return (targetSec - xs[lo] <= xs[hi] - targetSec) ? lo : hi;
 }
 
-function setPlotCursorBySec(sec) {
-  if (!currentPlotPrecip || sec == null) return false;
-  let idx = currentPlotInfo.secToIdx?.get(sec);
-  if (idx == null) idx = findClosestIdx(currentPlotInfo.xs, sec);
+function setPlotCursor(kind, sec) {
+  if (sec == null) return false;
+  const state = seriesState[kind];
+  const plot = state.plot;
+  if (!plot) return false;
+  let idx = state.secToIdx?.get(sec);
+  if (idx == null) idx = findClosestIdx(state.xs, sec);
   if (idx == null) {
-    currentPlotInfo.updateReadout?.(null, null);
+    state.updateReadout?.(null, null);
     return false;
   }
-  const xVal = currentPlotInfo.xs[idx];
-  const ySeries = currentPlotPrecip.data?.[1];
+  const xVal = state.xs[idx];
+  const ySeries = plot.data?.[1];
   const yVal = Array.isArray(ySeries) ? ySeries[idx] : null;
-  const left = currentPlotPrecip.valToPos(xVal, 'x');
-  currentPlotPrecip.setCursor({ idx, left });
-  const displaySec = currentPlotInfo.secToIdx?.has(sec) ? sec : xVal;
-  currentPlotInfo.updateReadout?.(displaySec, yVal);
+  const left = plot.valToPos(xVal, 'x');
+  plot.setCursor({ idx, left });
+  const displaySec = state.secToIdx?.has(sec) ? sec : xVal;
+  state.updateReadout?.(displaySec, yVal);
   return true;
 }
 
-function clearCurrentPlot() {
-  if (currentPlotPrecip) {
-    try { currentPlotPrecip.destroy(); } catch (e) { /* noop */ }
-  }
-  currentPlotPrecip = null;
-  currentPlotInfo = { xs: [], secToIdx: null, updateReadout: null };
-  const container = document.querySelector('#chart-precip');
+function markPlaceholder(kind, message) {
+  const cfg = SERIES_CONFIG[kind];
+  const container = document.querySelector(cfg.container);
   if (container) {
     container.innerHTML = '';
     container.classList.add('empty');
-    container.setAttribute('data-placeholder', 'loading…');
+    container.setAttribute('data-placeholder', message);
   }
-  const readoutEl = getReadoutElement('#chart-precip');
+  const readoutEl = getReadoutElement(cfg.container);
   if (readoutEl) readoutEl.textContent = '—';
+}
+
+function clearSeries(kind) {
+  const state = seriesState[kind];
+  if (state.plot) {
+    try { state.plot.destroy(); } catch (e) { /* noop */ }
+  }
+  state.plot = null;
+  state.xs = [];
+  state.secToIdx = new Map();
+  state.updateReadout = null;
+  markPlaceholder(kind, 'loading...');
+}
+
+function clearAllCharts() {
+  Object.keys(SERIES_CONFIG).forEach(clearSeries);
+  updateChartVisibility();
 }
 
 const readoutCache = new Map();
@@ -299,6 +337,11 @@ const sheet = document.getElementById('bottom-sheet');
 const sheetTitle = document.getElementById('sheet-title');
 const sheetMeta = document.getElementById('sheet-meta');
 const sheetClose = document.getElementById('sheet-close');
+const chartBlocks = {
+  precip: document.getElementById('block-precip'),
+  gust: document.getElementById('block-gust'),
+};
+const noneMessage = document.getElementById('chart-none-message');
 
 function openSheet(title) {
   sheetTitle.textContent = title;
@@ -316,15 +359,33 @@ function setSheetMeta(text) {
 }
 sheetClose?.addEventListener('click', closeSheet);
 
+function updateChartVisibility() {
+  Object.entries(chartBlocks).forEach(([kind, block]) => {
+    if (!block) return;
+    block.style.display = (activeLayer === kind) ? 'block' : 'none';
+  });
+  if (noneMessage) noneMessage.style.display = activeLayer ? 'none' : 'block';
+}
+
+function applyActiveLayer(kind) {
+  activeLayer = kind;
+  updateChartVisibility();
+  if (kind && currentActiveSec != null) setPlotCursor(kind, currentActiveSec);
+  if (kind) resizePlots();
+}
+
+updateChartVisibility();
+
 // ====== uPlot描画 ======
-function renderLine(containerSel, yLabel, xs, ys, existing) {
-  const el = document.querySelector(containerSel);
-  if (!el) return null;
+function renderSeries(kind, xs, ys) {
+  const cfg = SERIES_CONFIG[kind];
+  const container = document.querySelector(cfg.container);
+  if (!container) return null;
 
   const data = [xs, ys];
-  const readoutEl = getReadoutElement(containerSel);
-  const unitMatch = typeof yLabel === 'string' ? yLabel.match(/\(([^)]+)\)$/) : null;
-  const unitText = unitMatch ? unitMatch[1] : '';
+  const readoutEl = getReadoutElement(cfg.container);
+  const unitText = cfg.unit || '';
+  const axisLabel = cfg.title || (unitText ? `Value (${unitText})` : 'Value');
 
   const updateReadout = (sec, val) => {
     if (!readoutEl) return;
@@ -338,17 +399,36 @@ function renderLine(containerSel, yLabel, xs, ys, existing) {
     readoutEl.textContent = `${timeText} · ${valueText}`;
   };
 
+  const state = seriesState[kind];
+  const existing = state.plot;
+
   if (existing) {
-    if (!(existing.ctx && existing.ctx.asBars)) {
-      existing.destroy();
-    } else {
-      existing.setData(data);
-      const container = document.querySelector('#chart-precip');
-      if (container) container.classList.remove('empty');
-      setPlotInfo(xs, updateReadout);
-      updateReadout(null, null);
-      return existing;
-    }
+    existing.setData(data);
+    container.classList.remove('empty');
+    setPlotInfo(kind, xs, updateReadout);
+    state.updateReadout = updateReadout;
+    updateReadout(null, null);
+    return existing;
+  }
+
+  const el = container;
+  const isBar = cfg.type === 'bar';
+
+  const seriesOpts = {
+    label: axisLabel,
+    stroke: cfg.color,
+    spanGaps: true,
+  };
+
+  if (isBar) {
+    seriesOpts.width = 0;
+    seriesOpts.fill = 'rgba(31,119,180,0.55)';
+    seriesOpts.points = { show: false };
+    seriesOpts.paths = BAR_PATH || undefined;
+  } else {
+    seriesOpts.width = 2;
+    seriesOpts.fill = 'rgba(210,100,42,0.10)';
+    seriesOpts.points = { show: true, size: 3 };
   }
 
   const opts = {
@@ -356,45 +436,37 @@ function renderLine(containerSel, yLabel, xs, ys, existing) {
     height: el.clientHeight,
     padding: [PLOT_PADDING_TOP, null, PLOT_PADDING_BOTTOM, null],
     scales: { x: { time: true } },
-    cursor: {
-      x: true,
-      y: false,
-    },
+    cursor: { x: true, y: false },
     axes: [
       {
-        stroke: "#444",
-        label: "UTC",
+        stroke: '#444',
+        label: 'UTC',
         font: AXIS_FONT,
         lineHeight: AXIS_LINE_HEIGHT,
         splits: (u, axisIdx, scaleMin, scaleMax) => computeUtcSplits(scaleMin, scaleMax),
         values: (u, splits) => formatUtcLabels(u, splits, Boolean(u?.ctx?.showEdges)),
       },
-      { stroke: "#444", label: yLabel }
+      { stroke: '#444', label: axisLabel }
     ],
     series: [
-      { label: "time" },
-      {
-        label: yLabel,
-        // 棒グラフで表示
-        stroke: '#1f77b4',
-        width: 0,
-        fill: 'rgba(31,119,180,0.55)',
-        points: { show: false },
-        spanGaps: true,
-        paths: BAR_PATH || undefined,
-      }
+      { label: 'time' },
+      seriesOpts,
     ],
     hooks: {
       init: [u => {
         if (!u.ctx) u.ctx = {};
         u.ctx.showEdges = false;
-        u.ctx.asBars = Boolean(BAR_PATH);
-        setPlotInfo(xs, updateReadout);
+        u.ctx.asBars = isBar;
+        state.plot = u;
+        setPlotInfo(kind, xs, updateReadout);
+        state.updateReadout = updateReadout;
+        container.classList.remove('empty');
         updateReadout(null, null);
       }],
       setData: [u => {
         const xsCurrent = Array.isArray(u.data?.[0]) ? u.data[0] : [];
-        setPlotInfo(xsCurrent, updateReadout);
+        setPlotInfo(kind, xsCurrent, updateReadout);
+        state.updateReadout = updateReadout;
         updateReadout(null, null);
       }],
       setCursor: [u => {
@@ -415,13 +487,20 @@ function renderLine(containerSel, yLabel, xs, ys, existing) {
       }],
     },
   };
-  return new uPlot(opts, data, el);
+
+  const plot = new uPlot(opts, data, el);
+  state.plot = plot;
+  return plot;
 }
 
 function resizePlots() {
-  if (!currentPlotPrecip) return;
-  const el = document.querySelector('#chart-precip');
-  currentPlotPrecip.setSize({ width: el.clientWidth, height: el.clientHeight });
+  Object.entries(SERIES_CONFIG).forEach(([kind, cfg]) => {
+    const plot = seriesState[kind].plot;
+    if (!plot) return;
+    const el = document.querySelector(cfg.container);
+    if (!el) return;
+    plot.setSize({ width: el.clientWidth, height: el.clientHeight });
+  });
 }
 window.addEventListener('resize', () => { if (sheet.classList.contains('show')) resizePlots(); });
 
@@ -459,18 +538,17 @@ export function initTimeseries({ map, getTyphoonGeoJSON: getter }) {
     if (!tw) { console.warn('[timeseries] time window not found in geojson'); return; }
 
     openSheet(`Timeseries @ ${lng.toFixed(3)}, ${lat.toFixed(3)}`);
-    clearCurrentPlot();
-
-    const container = document.querySelector('#chart-precip');
+    clearAllCharts();
 
     if (!isInsideGrid(lng, lat)) {
-      if (container) container.setAttribute('data-placeholder', 'この地点は対象範囲外です');
+      markPlaceholder('precip', 'この地点は対象範囲外です');
+      markPlaceholder('gust', 'この地点は対象範囲外です');
       setSheetMeta('この地点は対象範囲外です');
       return;
     }
 
-    setSheetMeta('loading…');
-    if (container) container.setAttribute('data-placeholder', 'loading…');
+    setSheetMeta('loading...');
+    Object.keys(SERIES_CONFIG).forEach(kind => markPlaceholder(kind, 'loading...'));
     await new Promise(requestAnimationFrame);
 
     const { x, y } = ll2px(lng, lat);
@@ -479,91 +557,105 @@ export function initTimeseries({ map, getTyphoonGeoJSON: getter }) {
 
     const dates = hourlyRangeUTC(tw.start, tw.end);
     const stamps = dates.map(toStampUTC);
+    const xsBase = dates.map(d => Math.floor(d.getTime() / 1000));
+
+    const valuesToSeries = (vals) => vals.map(v => Number.isFinite(v) ? v : null);
+    const hasData = (arr) => Array.isArray(arr) && arr.some(v => v != null);
+
+    let precipXs = xsBase;
+    let precipYs = [];
+    let precipHasData = false;
+    let precipLabel = `${tw.start} – ${tw.end}`;
+
+    let gustYs = [];
+    let gustHasData = false;
 
     try {
-      let { values: vals, diag } = await askWorker('precip', stamps, x, y, SCALE.precip);
-      if (diag) {
-        console.log('[timeseries] first png diag:', diag);
-        // UIにも簡易表示（必要なら消してください）
-        if (diag.status !== 200) {
-          setSheetMeta(`最初のPNGが取得できません: ${diag.status}\n${diag.firstUrl}`);
-        } else {
-          setSheetMeta(`first=${diag.firstUrl}\nimg=${diag.wh.w}x${diag.wh.h} px=(${diag.px.xOrig},${diag.px.yOrig})->(${diag.px.x},${diag.px.y}) u16=${diag.u16} val=${diag.val ?? 'NaN'}`);
+      const { values: precipVals } = await askWorker('precip', stamps, x, y, SCALE.precip);
+      precipYs = valuesToSeries(precipVals);
+      precipHasData = hasData(precipYs);
+
+      if (!precipHasData) {
+        const keys = (window.STATE && Array.isArray(window.STATE.PRECIP_KEYS)) ? window.STATE.PRECIP_KEYS : [];
+        if (keys.length) {
+          console.log('[timeseries] fallback to STATE.PRECIP_KEYS', keys.length);
+          const fallbackRes = await askWorker('precip', keys, x, y, SCALE.precip);
+          const fallbackVals = fallbackRes.values || [];
+          const fallbackXs = [];
+          const fallbackYs = [];
+          keys.forEach((s, idx) => {
+            const m = s.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})Z$/);
+            if (!m) return;
+            const sec = Math.floor(Date.UTC(m[1], m[2]-1, m[3], m[4], m[5]) / 1000);
+            const raw = fallbackVals[idx];
+            fallbackXs.push(sec);
+            fallbackYs.push(Number.isFinite(raw) ? raw : null);
+          });
+          if (hasData(fallbackYs)) {
+            precipYs = fallbackYs;
+            precipXs = fallbackXs;
+            precipHasData = true;
+            precipLabel = `${keys[0]} – ${keys.at(-1)} (fallback)`;
+          }
         }
       }
 
-      const xs = dates.map(d => Math.floor(d.getTime() / 1000)); // Unix秒
-      const ys = vals.map(v => Number.isFinite(v) ? v : null);   // NaN→null
-
-      console.log('[timeseries] total:', vals.length, 'finite:', ys.length);
-      const nFinite = ys.filter(v=>v!=null).length;
-      console.log('[timeseries] non-null points:', nFinite, 'range:', {
-        min: (nFinite ? Math.min(...ys.filter(v=>v!=null)) : null),
-        max: (nFinite ? Math.max(...ys.filter(v=>v!=null)) : null),
-      });
-
-   if (ys.length === 0) {
-     // --- フォールバック：実在する時刻列（STATE.PRECIP_KEYS）で再試行 ---
-     const K = (window.STATE && Array.isArray(window.STATE.PRECIP_KEYS)) ? window.STATE.PRECIP_KEYS : [];
-     if (K.length) {
-       console.log('[timeseries] fallback to STATE.PRECIP_KEYS', K.length);
-       const ret = await askWorker('precip', K, x, y, SCALE.precip);
-       const vals2 = ret.values;
-       const dates2 = K.map(s => {
-         const m = s.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})Z$/);
-         return new Date(Date.UTC(m[1], m[2]-1, m[3], m[4], m[5]));
-       });
-       const xs2=[], ys2=[];
-       for (let i=0; i<vals2.length; i++){
-         const v = vals2[i];
-         if (Number.isFinite(v)) {
-           xs2.push(Math.floor(dates2[i].getTime()/1000));
-           ys2.push(v);
-         }
-       }
-       console.log('[timeseries] fallback finite:', ys2.length);
-       if (ys2.length > 0) {
-         currentPlotPrecip = renderLine('#chart-precip', 'Precip (mm/h)', xs2, ys2, currentPlotPrecip);
-         setSheetMeta(`${K[0]} – ${K.at(-1)} (fallback)`);
-         resizePlots();
-         return;
-       }
-     }
-
-      setSheetMeta('この期間の値が取得できません（ファイル未配置 / 404 / 地点がデータ域外 / NoData）。Consoleのログを確認してください。');
-      const sample = stamps.filter((_,i)=>i%Math.ceil(stamps.length/3)===0).slice(0,3);
-      for (const s of sample) {
-        const u = `${BASE_URL}/value_png/precip/precip_${s}.png`;
-       fetch(u, {cache:'no-cache'}).then(r=>console.log('[check]', s, r.status, u));
+      if (precipHasData) {
+        renderSeries('precip', precipXs, precipYs);
+      } else {
+        markPlaceholder('precip', 'データが取得できません');
       }
-      const container = document.querySelector('#chart-precip');
-      if (container) {
-        container.classList.add('empty');
-        container.setAttribute('data-placeholder', 'データが取得できません');
-      }
-      return;
-    }
 
-    currentPlotPrecip = renderLine('#chart-precip', 'Precip (mm/h)', xs, ys, currentPlotPrecip);
-    const container = document.querySelector('#chart-precip');
-    if (container) container.classList.remove('empty');
-    setSheetMeta(`${tw.start} – ${tw.end}`);
-    resizePlots();
+      try {
+        const { values: gustVals } = await askWorker('gust', stamps, x, y, SCALE.gust);
+        gustYs = valuesToSeries(gustVals);
+        gustHasData = hasData(gustYs);
+        if (gustHasData) {
+          renderSeries('gust', xsBase, gustYs);
+        } else {
+          markPlaceholder('gust', 'データが取得できません');
+        }
+      } catch (gustErr) {
+        console.error('[timeseries] gust fetch failed', gustErr);
+        markPlaceholder('gust', 'データが取得できません');
+      }
+
+      if (precipHasData || gustHasData) {
+        setSheetMeta(precipLabel);
+      } else {
+        setSheetMeta('この期間の値が取得できません');
+      }
+
+      resizePlots();
+      if (currentActiveSec != null) {
+        Object.keys(SERIES_CONFIG).forEach(kind => setPlotCursor(kind, currentActiveSec));
+      } else if (precipXs.length) {
+        currentActiveSec = precipXs[0];
+        Object.keys(SERIES_CONFIG).forEach(kind => setPlotCursor(kind, currentActiveSec));
+      }
+
+      updateChartVisibility();
     } catch (err) {
       setSheetMeta('データ取得に失敗しました');
-      // eslint-disable-next-line no-console
       console.error(err);
+      markPlaceholder('precip', 'データが取得できません');
+      markPlaceholder('gust', 'データが取得できません');
     }
   });
 
   return {
     // 台風選択が変わった時に呼ぶと、次回クリックから新しい期間が使われる
     setTyphoonGetter(fn) { getTyphoonGeoJSON = fn; },
-    setActiveTime(sec) { return setPlotCursorBySec(sec); },
+    setActiveTime(sec) {
+      currentActiveSec = sec;
+      Object.keys(SERIES_CONFIG).forEach(kind => setPlotCursor(kind, sec));
+      return true;
+    },
+    setActiveLayer(kind) { applyActiveLayer(kind); },
     destroy() {
       worker?.terminate();
       worker = null;
-      currentPlotInfo = { xs: [], secToIdx: null, updateReadout: null };
+      clearAllCharts();
     }
   };
 }

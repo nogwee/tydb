@@ -3,7 +3,7 @@
 // ピクセル単点サンプル。A==0 は常に NoData とみなす（透明→色が0に潰れる対策）。
 
 const NODATA_U16 = 65535;
-const SCALE = { precip: 0.1 };
+const SCALE = { precip: 0.1, gust: 0.1 };
 const MODE  = 'RG16_BE';   // 'RG16_BE' | 'GRAY8' | 'G_ONLY' | 'MAX_RGB'
 
 async function fetchBitmap(url) {

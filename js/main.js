@@ -148,6 +148,15 @@ async function bootstrap(){
         getTyphoonGeoJSON: () => STATE.tyGeoJSON
       });
 
+      const syncTimeseriesLayer = () => {
+        if (!ts) return;
+        const layer = els.chkGust?.checked ? 'gust' : (els.chkPre.checked ? 'precip' : null);
+        ts.setActiveLayer(layer);
+      };
+      syncTimeseriesLayer();
+      els.chkPre.addEventListener('change', syncTimeseriesLayer);
+      els.chkGust?.addEventListener('change', syncTimeseriesLayer);
+
       const initialIdx = Number(els.slider.value) || 0;
       setActiveTime(initialIdx);
     }
